@@ -1,0 +1,40 @@
+@import "reset";
+
+body {
+	background: black;
+	color: white;
+}
+
+.wrapper {
+	width: 640px;
+	padding-top: 100px;
+	margin: 0 auto;
+	color: white;
+}
+
+.screen {
+	width: 640px;
+	height: 380px;
+	position: relative;
+	border: 1px solid white;
+	overflow: auto;
+
+	.screen-content {
+		width: 100%;
+		min-height: 100%;
+		position: absolute;
+		bottom: 0;
+		left: 0;
+	}
+}
+
+.main-input {
+	color: white;
+	display: block;
+	margin-top: 30px;
+	width: 100%;
+	font-size: 32px;
+	padding: 5px;
+	background: none;
+	border: 1px solid grey;
+}

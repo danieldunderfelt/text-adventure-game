@@ -26,7 +26,7 @@ module.exports = function(grunt) {
       }
     },
     autoprefixer : {
-      single_file: {
+      dist: {
         src: 'css/text.css',
         dest: 'dist/css/text.css'
       }
@@ -47,11 +47,13 @@ module.exports = function(grunt) {
         files: ['js/**/*.js'],
         tasks : ['browserify']
       },
+      gruntfile: {
+        files: "Gruntfile.js"
+      }
     }
   });
 
   require('load-grunt-tasks')(grunt);
 
-  grunt.registerTask('default', ['uglify', 'sass', 'cssmin']);
   grunt.registerTask('dev', ['watch']);
 };
