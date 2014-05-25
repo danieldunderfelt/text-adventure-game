@@ -8,6 +8,7 @@ var webapp = function() {
 	this.prototype = Object.create(engine);
 
 	var self = this;
+	var lastCommand = "";
 
 	var $display;
 
@@ -30,12 +31,13 @@ var webapp = function() {
 	};
 
 	var parseCommand = function(e) {
-		var command = $(this).val();
-		var content = self.doCommand(command);
+		lastCommand = $(this).val();
+		var content = self.doCommand(lastCommand);
 		if(content !== false) doOutput(content); 
 	};
 
 	var doOutput = function(content) {
+		self.display("> " + lastCommand);
 		self.display(content);
 		$("#input").val("");
 	};

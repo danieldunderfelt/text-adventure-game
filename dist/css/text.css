@@ -3,9 +3,11 @@
   -webkit-box-sizing: border-box;
   box-sizing: border-box; }
 
+@import url("http://fonts.googleapis.com/css?family=Inconsolata:400,700");
 body {
   background: black;
-  color: white; }
+  color: white;
+  font-family: "Inconsolata", "Courier New", serif; }
 
 .wrapper {
   width: 640px;
@@ -25,6 +27,8 @@ body {
     position: absolute;
     bottom: 0;
     left: 0; }
+    .screen .screen-content p {
+      margin: 20px; }
 
 .main-input {
   color: white;
@@ -34,4 +38,7 @@ body {
   font-size: 32px;
   padding: 5px;
   background: none;
-  border: 1px solid grey; }
+  border: 1px solid grey;
+  outline: none; }
+  .main-input:focus {
+    border: 1px solid grey; }

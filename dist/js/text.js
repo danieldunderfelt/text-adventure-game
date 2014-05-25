@@ -14,8 +14,32 @@ var commands = {
 		activeOn: ["1"]
 	},
 	"go forward": {
-		action: ["goto", "2"],
+		action: ["goto", "3"],
 		activeOn: ["2"]
+	},
+	"open door": {
+		action: ["goto", "4"],
+		activeOn: ["3"]
+	},
+	"talk co-passenger": {
+		action: ["goto", "5"],
+		activeOn: ["4"]
+	},
+	"look flabbergasted": {
+		action: ["goto", "6"],
+		activeOn: ["5"]
+	},
+	"kill co-passenger": {
+		action: ["goto", "7"],
+		activeOn: ["6"]
+	},
+	"sit chair": {
+		action: ["goto", "8"],
+		activeOn: ["7"]
+	},
+	"dream": {
+		action: ["goto", "end"],
+		activeOn: ["8"]
 	},
 };
 
@@ -94,13 +118,34 @@ $(app.start);
 var story = {
 
 	welcome: {
-		init: "Welcome to the Empty channel text adventure game!",
+		init: "Welcome to the Empty Channel text adventure game! Write 'start' to begin.",
 	},
 	"1": {
 		init: "Survivor's log, day 47. I am sure everyone is dead. I can't hear or see anything either. Why are they dead? Who killed them? Maybe I shall never find out.",
 	},
 	"2": {
 		init: "I look around, but all I see is darkness.",
+	},
+	"3": {
+		init: "I tremble forwards in the darkness, until my forehead hits something made of wood.",
+	},
+	"4": {
+		init: "I open the wooden thingie that turned out to be a door. Once I open it, I see my co-passengers. They react as if nothing is wrong!",
+	},
+	"5": {
+		init: "Co-passenger says: 'Oh, there you are. Sorry, we had to throw you in the closet because you started acting all crazy! Great that you feel better now.'",
+	},
+	"6": {
+		init: "Co-passenger says: '... you DO feel better, right?'",
+	},
+	"7": {
+		init: "This startled the others something fierce. They ran around, frantically looking for the nearest exit. But I am tired. The chair next to me looks comfy.",
+	},
+	"8": {
+		init: "I fall asleep, having finally figured out what happened to my co-passengers.",
+	},
+	"end": {
+		init: "THANK YOU FOR PLAYING THE EMPTY-CHANNEL TEXT ADVENTURE GAME!",
 	},
 };
 
@@ -122,6 +167,7 @@ var webapp = function() {
 	this.prototype = Object.create(engine);
 
 	var self = this;
+	var lastCommand = "";
 
 	var $display;
 
@@ -144,12 +190,13 @@ var webapp = function() {
 	};
 
 	var parseCommand = function(e) {
-		var command = $(this).val();
-		var content = self.doCommand(command);
+		lastCommand = $(this).val();
+		var content = self.doCommand(lastCommand);
 		if(content !== false) doOutput(content); 
 	};
 
 	var doOutput = function(content) {
+		self.display("> " + lastCommand);
 		self.display(content);
 		$("#input").val("");
 	};

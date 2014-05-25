@@ -1,8 +1,10 @@
 @import "reset";
+@import url("http://fonts.googleapis.com/css?family=Inconsolata:400,700");
 
 body {
 	background: black;
 	color: white;
+	font-family: "Inconsolata", "Courier New", serif;
 }
 
 .wrapper {
@@ -25,6 +27,10 @@ body {
 		position: absolute;
 		bottom: 0;
 		left: 0;
+
+		p {
+			margin: 20px;
+		}
 	}
 }
 
@@ -37,4 +43,9 @@ body {
 	padding: 5px;
 	background: none;
 	border: 1px solid grey;
+	outline: none;
+
+	&:focus {
+		border: 1px solid grey;		
+	}
 }
