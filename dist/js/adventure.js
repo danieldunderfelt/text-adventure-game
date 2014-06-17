@@ -1,209 +1,446 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var commands = {
+var $ = require('jquery');
+var game = require('./game');
 
-	"log out": {
-		action: ["do" ,"logout"],
-		activeOn: "all"
-	},
-	"start": {
-		action: ["goto", "1"],
-		activeOn: ["welcome"]
-	},
-	"look around": {
-		action: ["goto", "2"],
-		activeOn: ["1"]
-	},
-	"go forward": {
-		action: ["goto", "3"],
-		activeOn: ["2"]
-	},
-	"open door": {
-		action: ["goto", "4"],
-		activeOn: ["3"]
-	},
-	"talk co-passenger": {
-		action: ["goto", "5"],
-		activeOn: ["4"]
-	},
-	"look flabbergasted": {
-		action: ["goto", "6"],
-		activeOn: ["5"]
-	},
-	"kill co-passenger": {
-		action: ["goto", "7"],
-		activeOn: ["6"]
-	},
-	"sit chair": {
-		action: ["goto", "8"],
-		activeOn: ["7"]
-	},
-	"dream": {
-		action: ["goto", "end"],
-		activeOn: ["8"]
-	},
-};
-
-module.exports = commands;
-},{}],2:[function(require,module,exports){
-var story = require("./story");
-var commands = require("./commands");
-var uitext = require("./uitext");
-
-var engine = function() {
+var Application = function() {
 
 	var self = this;
-	self.stage = "welcome";
 
-	var commandCache = [];
-	var currentStory = [];
-
-	this.getInitContent = function() {
-		currentStory.push(story[self.stage].init);
-		return story[self.stage].init;
-	};
-
-	this.doCommand = function(command) {
-		var comObj = searchCommand(command);
-		if(comObj === false) return false;
-		return getContent(comObj);
-	};
-
-	var searchCommand = function(command) {
-		var com = command.toLowerCase();
-		var getCommand = commands[com] !== undefined ? commands[com] : false;
-		return getCommand;
-	};
-
-	var getContent = function(command) {
-		if(validateCommand(command) === false) return false;
-		var content = doCommandAction(command.action);
-		return content;
-	};
-
-	var validateCommand = function(command) {
-		if(command.activeOn === "all") return true;
-		return command.activeOn.indexOf(self.stage) > -1;
-	};
-
-	var doCommandAction = function(action) {
-		var result = false;
-
-		if(action[0] === "goto") {
-			result = doGoto(action[1]);
-			self.stage = action[1];
-		}
-
-		if(action[0] === "do") {
-			result = doCommand(action[1]);
-		}
-
-		return result;
-	};
-
-	var doCommand = function(action) {
-		return uitext[action];
-	};
-
-	var doGoto = function(toStage) {
-		return story[toStage].init;
+	this.currentGame = {};
+	
+	this.init = function() {
+		self.currentGame = new game(self);
+		self.currentGame.init();
 	};
 };
 
-module.exports = engine;
-},{"./commands":1,"./story":4,"./uitext":5}],3:[function(require,module,exports){
-var app = require("./webapp");
-var $ = require("jquery");
-$(app.start);
-},{"./webapp":6,"jquery":7}],4:[function(require,module,exports){
-var story = {
+module.exports = Application;
+},{"./game":8,"jquery":18}],2:[function(require,module,exports){
+var $ = require('jquery');
+var globalCommands = require('./data/globalCommands');
 
-	welcome: {
-		init: "Welcome to the Empty Channel text adventure game! Write 'start' to begin.",
-	},
-	"1": {
-		init: "Survivor's log, day 47. I am sure everyone is dead. I can't hear or see anything either. Why are they dead? Who killed them? Maybe I shall never find out.",
-	},
-	"2": {
-		init: "I look around, but all I see is darkness.",
-	},
-	"3": {
-		init: "I tremble forwards in the darkness, until my forehead hits something made of wood.",
-	},
-	"4": {
-		init: "I open the wooden thingie that turned out to be a door. Once I open it, I see my co-passengers. They react as if nothing is wrong!",
-	},
-	"5": {
-		init: "Co-passenger says: 'Oh, there you are. Sorry, we had to throw you in the closet because you started acting all crazy! Great that you feel better now.'",
-	},
-	"6": {
-		init: "Co-passenger says: '... you DO feel better, right?'",
-	},
-	"7": {
-		init: "This startled the others something fierce. They ran around, frantically looking for the nearest exit. But I am tired. The chair next to me looks comfy.",
-	},
-	"8": {
-		init: "I fall asleep, having finally figured out what happened to my co-passengers.",
-	},
-	"end": {
-		init: "THANK YOU FOR PLAYING THE EMPTY-CHANNEL TEXT ADVENTURE GAME!",
-	},
+var commandParser = function(contextCommands) {
+
+	var self = this;
+	var availableCommands = $.extend({}, globalCommands, contextCommands);
+
+	this.parse = function(input) {
+		
+		// First, normalize to lower case and split at spaces
+		var inputSegments = input.toLowerCase().split(" ");
+		
+		// If no command is found, this returns false
+		var commandData = findCmdData(inputSegments);
+
+		// Insert the arguments if we've struck gold. Get the arguments at the defined starting index.
+		if( commandData !== false ) commandData.arguments = inputSegments.splice(commandData.argumentStartIndex);
+
+		// Return what we got, or false.
+		return commandData;
+	};
+
+	var findCmdData = function(inputSegments) {
+		// False by default
+		var commandData = false;
+
+		for (var cmd in availableCommands) {
+			
+			// If the first part of the input matches our available top-level commands,
+			if (availableCommands.hasOwnProperty(cmd) && cmd === inputSegments[0]) {
+			
+				// check if it has sub-commands (ie has a object called 'methods')
+				if( typeof availableCommands[cmd]["methods"] === "undefined" ) {
+			
+					// If not, this is the command data we want.
+					commandData = availableCommands[cmd];
+			
+					// Append the full command
+					commandData.fullCommand = inputSegments;
+
+					// And tell our friend above at what index the arguments start
+					commandData.argumentStartIndex = 1;
+			
+					// And done.
+					break;
+				}
+				else {
+			
+					// Interesting, we DO have subcommands! Loop them.
+					for (var subCmd in availableCommands[cmd]["methods"]) {
+			
+						// Now we check against segment 2.
+						if( availableCommands[cmd]["methods"].hasOwnProperty(subCmd) && subCmd === inputSegments[1] ) {
+			
+							// Nice, a match! We're not interested in the rest of the segments, they're just arguments for this command.
+							commandData = availableCommands[cmd]["methods"][subCmd];
+							commandData.fullCommand = inputSegments;
+							commandData.argumentStartIndex = 2;
+
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		return commandData;
+	};
 };
 
-module.exports = story;
+module.exports = commandParser;
+},{"./data/globalCommands":5,"jquery":18}],3:[function(require,module,exports){
+var UItext = {
+
+	start: [
+		"System: ONLINE",
+		"Network: ONLINE",
+		"Guest logged in.",
+		"Welcome to ShadowCommand. To start a new session, write 'new session'. To load a saved session, write 'load session'."
+	],
+
+	newGame: [
+		"Starting new session..."
+	]
+};
+
+module.exports = UItext;
+},{}],4:[function(require,module,exports){
+var gameData = {
+
+	settings: {
+
+	},
+
+	inventory: {
+
+	},
+
+	currentRoom: {
+		"room": 1
+	}
+};
+
+module.exports = gameData;
 },{}],5:[function(require,module,exports){
-var uitext = {
-	"logout": "User has logged out."
+var globalCommands = {
+
+	"save": {
+		type: "default",
+		scope: "game",
+		action: "saveGame",
+		description: "'save' saves the current game.",
+		active: true
+	},
+	"help": {
+		type: "default",
+		scope: "game",
+		action: "showHelp",
+		description: "'help' shows a list of available commands. Note that this shows only those that are available at the current time, not ALL the commands.",
+		active: true
+	}
 };
 
-module.exports = uitext;
+module.exports = globalCommands;
 },{}],6:[function(require,module,exports){
-var engine = require("./engine");
-var $ = require("jquery");
-var uitext = require("./uitext");
 
-var webapp = function() {
+},{}],7:[function(require,module,exports){
+var roomlist = {
 
-	engine.apply(this);
-	this.prototype = Object.create(engine);
+	"mainmenu": require('../rooms/mainmenu')
+};
+
+module.exports = roomlist;
+},{"../rooms/mainmenu":16}],8:[function(require,module,exports){
+var $ = require('jquery');
+var rooms = require('./data/roomlist');
+var output = require('./screenrenderer');
+var gameActions = require('./gameactions');
+var defaultData = require('./data/gameData');
+var progress = require('./progress');
+var input = require('./input');
+
+var Game = function(app) {
 
 	var self = this;
-	var lastCommand = "";
 
-	var $display;
+	this.gameData = {};
+	this.inputActive = false;
+	this.currentRoom = {};
+	this.previousCommands = [];
+	this.gameActions = new gameActions(this);
+	this.input = new input(this);
+	this.app = app;
 
-	this.start = function() {
-		$display = $("#screen");
-		doInit();
+	this.init = function() {
+		doStartScreen();
+		self.input.init();
+	};
+
+	this.loadRoom = function(roomId) {
+		var room = rooms[roomId];
+		
+		if(typeof room !== "undefined") {
+			self.currentRoom = room;
+			self.currentRoom.init();
+		}
+	};
+
+	this.loadProgress = function() {
+		var gameSave = progress.load();
+		
+		if(gameSave === false) {
+			self.gameData = defaultData;
+		}
+		else {
+			self.gameData = gameSave;
+		}
+
+		loadGame();
+	};
+
+	this.showHelp = function() {
+		console.log("help");
+	};
+
+	this.doError = function() {
+		output.renderSimple(self.currentRoom.content.commandError);
+	};
+
+	var doStartScreen = function() {
+		self.loadRoom("mainmenu");
+	};
+};
+
+module.exports = Game;
+},{"./data/gameData":4,"./data/roomlist":7,"./gameactions":9,"./input":11,"./progress":13,"./screenrenderer":17,"jquery":18}],9:[function(require,module,exports){
+var gameActions = function(game) {
+
+	this.newGame = function() {
+		console.log("New game");
+	};
+
+	this.loadGame = function() {
+		console.log("game loaded");
+	};
+
+	this.saveGame = function() {
+		console.log("game saved");
+	};
+
+	this.showHelp = function() {
+		game.showHelp();
+	};
+};
+
+module.exports = gameActions;
+},{}],10:[function(require,module,exports){
+var Application = require('./app');
+var $ = require('jquery');
+
+$(function() {
+	window.CommandOS = new Application();
+	CommandOS.init();
+});
+},{"./app":1,"jquery":18}],11:[function(require,module,exports){
+var $ = require('jquery');
+var commandParser = require('./commandParser');
+
+var Input = function(game) {
+
+	var self = this;
+	var $input;
+
+	this.parser = {};
+
+	this.init = function() {
+		$input = $("#input");
 		startListeners();
 	};
 
-	this.display = function(text) {
-		$display.append("<p>"+text+"</p>");
-	};
-
-	var doInit = function() {
-		self.display(self.getInitContent());
-	};
-
 	var startListeners = function() {
-		$("#input").on("keyup", parseCommand)
+		$(window).on("keyup", getInput);
 	};
 
-	var parseCommand = function(e) {
-		lastCommand = $(this).val();
-		var content = self.doCommand(lastCommand);
-		if(content !== false) doOutput(content); 
+	var getInput = function(e) {
+		if(e.keyCode === 13) {
+			var input = $input.val();
+			receiveInput(input);
+		}
 	};
 
-	var doOutput = function(content) {
-		self.display("> " + lastCommand);
-		self.display(content);
-		$("#input").val("");
+	var receiveInput = function(input) {
+		self.parser = new commandParser(game.currentRoom.commands);
+		var parsedCommand = self.parser.parse(input);
+		
+		if(parsedCommand !== false) {
+			doCommand(parsedCommand);
+		}
+		else {
+			doError();
+		}
+	};
+
+	var doCommand = function(commandData) {
+		var action;
+
+		if(commandData.scope === "game") {
+			action = game.gameActions[commandData.action];
+		}
+		else if(commandData.scope === "room") {
+			action = game.currentRoom[commandData.action];
+		}
+
+		if(typeof action === "undefined") {
+			doError();
+		}
+		else {
+			commandActions(action, commandData.fullCommand);
+		}
+	};
+
+	var commandActions = function(action, command) {
+		$input.val("");
+		game.previousCommands.push(command);
+		action(command);
 	};
 };
 
-module.exports = new webapp();
-},{"./engine":2,"./uitext":5,"jquery":7}],7:[function(require,module,exports){
+module.exports = Input;
+},{"./commandParser":2,"jquery":18}],12:[function(require,module,exports){
+module.exports=require(6)
+},{}],13:[function(require,module,exports){
+var Progress = function() {
+
+	var self = this;
+
+	this.save = function(gameData) {
+		localStorage.setItem("textadventure", JSON.stringify(gameData));
+	}
+
+	this.load = function() {
+		var savedData = localStorage.getItem("textadventure");
+		return JSON.parse(savedData);
+	};
+};
+
+module.exports = new Progress();
+},{}],14:[function(require,module,exports){
+var output = require('../screenrenderer');
+
+var baseRoom = function() {
+
+	var self = this;
+
+	this.showContent = function(content) {
+		output.renderSequence(content);
+	};
+};
+
+module.exports = baseRoom;
+},{"../screenrenderer":17}],15:[function(require,module,exports){
+var commands = require('../data/roomcommands/charCreationPrompts');
+var UItext = require('../data/UItext');
+var baseRoom = require('./baseRoom');
+
+var CharacterCreation = function() {
+	this.prototype = Object.create(baseRoom);
+	baseRoom.call(this);
+
+	var self = this;
+
+	this.commands = commands;
+
+	this.init = function() {
+		self.showContent(self.content.start);
+	};
+
+	this.content = {
+		start: UItext.start,
+		commandError: "Command not recognised. Try again."
+	};
+};
+
+module.exports = new CharacterCreation();
+},{"../data/UItext":3,"../data/roomcommands/charCreationPrompts":6,"./baseRoom":14}],16:[function(require,module,exports){
+var UItext = require('../data/UItext');
+var baseRoom = require('./baseRoom');
+
+var MainMenu = function() {
+	this.prototype = Object.create(baseRoom);
+	baseRoom.call(this);
+
+	var self = this;
+
+	this.init = function() {
+		self.showContent(self.content.start);
+	};
+
+	this.commands = {
+		"new": {
+			methods: {
+				"session": {
+					type: "default",
+					scope: "game",
+					action: "newGame",
+					active: true
+				},
+			},
+			description: "'new session' loads a new game."
+		},
+		"load": {
+			type: "default",
+			methods: {
+				"session": {
+					type: "default",
+					scope: "game",
+					action: "loadGame",
+					active: true
+				}
+			},
+			description: "'load session' loads a saved game."
+		}
+	}
+
+	this.content = {
+		start: UItext.start,
+		commandError: "Command not recognised. Try again."
+	};
+};
+
+module.exports = new MainMenu();
+},{"../data/UItext":3,"./baseRoom":14}],17:[function(require,module,exports){
+var $ = require('jquery');
+
+var ScreenRenderer = function() {
+
+	var self = this;
+
+	this.renderSimple = function(text) {
+		render(text);
+	};
+
+	this.renderSequence = function(textArray) {
+		var counter = 0;
+		
+		function next() {
+			if(counter < textArray.length) {
+				render(textArray[counter]);
+				counter++;
+				setTimeout(next, 400);
+			}
+		}
+
+		next();
+	};
+
+	var render = function(text) {
+		var $text = $("<P>" + text + "</p>");
+		$("#screen").append($text);
+	};
+};
+
+module.exports = new ScreenRenderer();
+},{"jquery":18}],18:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.1
  * http://jquery.com/
@@ -9395,4 +9632,4 @@ return jQuery;
 
 }));
 
-},{}]},{},[1,2,3,4,5,6])
+},{}]},{},[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17])

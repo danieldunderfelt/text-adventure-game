@@ -31,6 +31,7 @@ body {
       margin: 20px; }
 
 .main-input {
+  font-family: "Inconsolata", "Courier New", serif;
   color: white;
   display: block;
   margin-top: 30px;

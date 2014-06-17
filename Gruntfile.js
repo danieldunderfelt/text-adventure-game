@@ -11,7 +11,7 @@ module.exports = function(grunt) {
     browserify: {
       dist: {
         files: {
-          "dist/js/text.js": "js/**/*.js"
+          "dist/js/adventure.js": "js/**/*.js"
         },
         options: {
           transform: ['debowerify']
@@ -31,6 +31,16 @@ module.exports = function(grunt) {
         dest: 'dist/css/text.css'
       }
     },
+    connect: {
+      server: {
+        options: {
+          port: 9001,
+          base: 'dist',
+          keepalive: true,
+          hostname: '127.0.0.1'
+        }
+      }
+    },
     watch: {
       scss: {
         files: 'scss/**/*.scss',
@@ -38,10 +48,7 @@ module.exports = function(grunt) {
       },
       css: {
         files: 'css/*.css',
-        tasks: ['autoprefixer'],
-        options: {
-          livereload: true
-        }
+        tasks: ['autoprefixer']
       },
       js: {
         files: ['js/**/*.js'],
@@ -49,6 +56,9 @@ module.exports = function(grunt) {
       },
       gruntfile: {
         files: "Gruntfile.js"
+      },
+      options: {
+        livereload: true
       }
     }
   });

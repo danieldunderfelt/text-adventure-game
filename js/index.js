@@ -1,3 +1,7 @@
-var app = require("./webapp");
-var $ = require("jquery");
-$(app.start);
+var Application = require('./app');
+var $ = require('jquery');
+
+$(function() {
+	window.CommandOS = new Application();
+	CommandOS.init();
+});
