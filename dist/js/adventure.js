@@ -108,7 +108,16 @@ module.exports = UItext;
 var gameData = {
 
 	settings: {
-
+		player: {
+			name: "Proxy",
+			stats: {
+				social: 0,
+				anarchist: 10,
+				criminal: 10,
+				intelligence: 5,
+				luck: 5
+			}
+		}
 	},
 
 	inventory: {
@@ -116,7 +125,8 @@ var gameData = {
 	},
 
 	currentRoom: {
-		"room": 1
+		roomId: "mainmenu",
+		roomData: {}
 	}
 };
 
@@ -125,14 +135,14 @@ module.exports = gameData;
 var globalCommands = {
 
 	"save": {
-		type: "default",
+		type: "action",
 		scope: "game",
 		action: "saveGame",
 		description: "'save' saves the current game.",
 		active: true
 	},
 	"help": {
-		type: "default",
+		type: "action",
 		scope: "game",
 		action: "showHelp",
 		description: "'help' shows a list of available commands. Note that this shows only those that are available at the current time, not ALL the commands.",
@@ -145,12 +155,12 @@ module.exports = globalCommands;
 
 },{}],7:[function(require,module,exports){
 var roomlist = {
-
-	"mainmenu": require('../rooms/mainmenu')
+	"main_menu": require('../rooms/mainmenu'),
+	"create_char": require('../rooms/characterCreation'),
 };
 
 module.exports = roomlist;
-},{"../rooms/mainmenu":17}],8:[function(require,module,exports){
+},{"../rooms/characterCreation":16,"../rooms/mainmenu":17}],8:[function(require,module,exports){
 var $ = require('jquery');
 var output = require('./screenrenderer');
 var gameActions = require('./gameactions');
@@ -163,7 +173,7 @@ var Game = function(app) {
 
 	var self = this;
 
-	this.gameData = {};
+	this.gameData = defaultData;
 	this.inputActive = false;
 	this.previousCommands = [];
 	this.gameActions = new gameActions(this);
@@ -177,7 +187,16 @@ var Game = function(app) {
 		self.input.init();
 	};
 
-	this.loadProgress = function() {
+	this.newGame = function() {
+		self.gameData.currentRoom.roomId = "create_char";
+		self.roomManager.loadRoom(self.gameData.currentRoom.roomId);
+	};
+
+	this.loadGame = function() {
+		
+	};
+
+	var loadProgress = function() {
 		var gameSave = progress.load();
 		
 		if(gameSave === false) {
@@ -195,24 +214,53 @@ var Game = function(app) {
 	};
 
 	this.doError = function() {
-		output.renderSimple(self.currentRoom.content.commandError);
+		output.renderSimple(self.roomManager.currentRoom.content.commandError);
+	};
+
+	this.receiveData = function(data, toObject) {
+
+	};
+
+	this.doCommand = function(commandData) {
+		var action;
+
+		if(commandData.scope === "game") {
+			action = self.gameActions[commandData.action];
+		}
+		else if(commandData.scope === "room") {
+			action = self.roomManager.currentRoom[commandData.action];
+		}
+
+		if(typeof action === "undefined") {
+			self.doError();
+		}
+		else {
+			commandActions(action, commandData.fullCommand);
+		}
+	};
+
+	var commandActions = function(action, command) {
+		output.echoCommand(command);
+		self.input.cleanInput();
+		self.previousCommands.push(command);
+		action(command);
 	};
 
 	var doStartScreen = function() {
-		self.roomManager.loadRoom("mainmenu");
+		self.roomManager.loadRoom("main_menu");
 	};
 };
 
 module.exports = Game;
-},{"./data/gameData":4,"./gameactions":9,"./input":11,"./progress":13,"./roomManager":14,"./screenrenderer":18,"jquery":19}],9:[function(require,module,exports){
+},{"./data/gameData":4,"./gameactions":9,"./input":11,"./progress":12,"./roomManager":14,"./screenrenderer":18,"jquery":19}],9:[function(require,module,exports){
 var gameActions = function(game) {
 
 	this.newGame = function() {
-		console.log("New game");
+		game.newGame();
 	};
 
 	this.loadGame = function() {
-		console.log("game loaded");
+		game.loadGame();
 	};
 
 	this.saveGame = function() {
@@ -243,10 +291,20 @@ var Input = function(game) {
 	var $input;
 
 	this.parser = {};
+	this.inputHandler;
 
 	this.init = function() {
 		$input = $("#input");
+		self.inputHandler = self.receiveInput;
 		startListeners();
+	};
+
+	this.deferInput = function(deferTo) {
+		self.inputHandler = deferTo;
+	};
+
+	this.cleanInput = function() {
+		$input.val("");
 	};
 
 	var startListeners = function() {
@@ -256,51 +314,25 @@ var Input = function(game) {
 	var getInput = function(e) {
 		if(e.keyCode === 13) {
 			var input = $input.val();
-			receiveInput(input);
+			self.inputHandler(input);
 		}
 	};
 
-	var receiveInput = function(input) {
-		self.parser = new commandParser(game.currentRoom.commands);
+	this.receiveInput = function(input) {
+		self.parser = new commandParser(game.roomManager.currentRoom.commands);
 		var parsedCommand = self.parser.parse(input);
 		
 		if(parsedCommand !== false) {
-			doCommand(parsedCommand);
+			game.doCommand(parsedCommand);
 		}
 		else {
-			doError();
+			game.doError();
 		}
-	};
-
-	var doCommand = function(commandData) {
-		var action;
-
-		if(commandData.scope === "game") {
-			action = game.gameActions[commandData.action];
-		}
-		else if(commandData.scope === "room") {
-			action = game.currentRoom[commandData.action];
-		}
-
-		if(typeof action === "undefined") {
-			doError();
-		}
-		else {
-			commandActions(action, commandData.fullCommand);
-		}
-	};
-
-	var commandActions = function(action, command) {
-		$input.val("");
-		game.previousCommands.push(command);
-		action(command);
 	};
 };
 
 module.exports = Input;
 },{"./commandParser":2,"jquery":19}],12:[function(require,module,exports){
-module.exports=require(6)
-},{}],13:[function(require,module,exports){
 var Progress = function() {
 
 	var self = this;
@@ -316,10 +348,33 @@ var Progress = function() {
 };
 
 module.exports = new Progress();
+},{}],13:[function(require,module,exports){
+var userCreation = function(room) {
+
+	var self = this;
+	var userData = {};
+	var currentStage = "";
+
+	this.begin = function() {
+		room.print(room.content.userCreation.begin);
+		currentStage = "createName";
+		return currentStage;
+	};
+
+	this.receiveInput = function(input) {
+		console.log(input);
+	};
+
+	this.createName = function(input) {
+		userData.name = input;
+	};
+};
+
+module.exports = userCreation;
 },{}],14:[function(require,module,exports){
 var rooms = require('./data/roomlist');
 
-var roomManager = function() {
+var roomManager = function(game) {
 
 	var self = this;
 
@@ -333,9 +388,11 @@ var roomManager = function() {
 		var room = rooms[roomId];
 		
 		if(typeof room !== "undefined") {
-			self.currentRoom = room;
+			self.currentRoom = new room(game);
 			self.currentRoom.init();
 		}
+
+		return self.currentRoom;
 	};
 };
 
@@ -347,7 +404,7 @@ var baseRoom = function() {
 
 	var self = this;
 
-	this.showContent = function(content) {
+	this.print = function(content) {
 		output.renderSequence(content);
 	};
 };
@@ -357,45 +414,70 @@ module.exports = baseRoom;
 var commands = require('../data/roomcommands/charCreationPrompts');
 var UItext = require('../data/UItext');
 var baseRoom = require('./baseRoom');
+var userCreation = require('../roomLib/userCreation');
 
-var CharacterCreation = function() {
+var CharacterCreation = function(game) {
 	this.prototype = Object.create(baseRoom);
 	baseRoom.call(this);
 
 	var self = this;
-
-	this.commands = commands;
+	this.userCreation = new userCreation(this);
 
 	this.init = function() {
-		self.showContent(self.content.start);
+		self.print(self.content.start);
+	};
+
+	this.userCreation = function() {
+		game.input.deferInput(self.userCreation.receiveInput);
+		self.userCreation.begin();
 	};
 
 	this.content = {
-		start: UItext.start,
-		commandError: "Command not recognised. Try again."
+		start: [
+			"/~~~/ USER CREATION /~~~/",
+			"You will need root access to ShadowCommand to perform your tasks. Write 'create user' to begin user creation."
+		],
+		userCreation: {
+			begin: ["Enter your desired username."]
+		},
+		commandError: "Access denied. Your instructions include all permitted actions."
+	};
+
+	this.commands = {
+		"create": {
+			methods: {
+				"user": {
+					type: "action",
+					scope: "room",
+					action: "userCreation",
+					active: true
+				}
+			},
+			description: "'Create user' activates user creation."
+		}
 	};
 };
 
-module.exports = new CharacterCreation();
-},{"../data/UItext":3,"../data/roomcommands/charCreationPrompts":6,"./baseRoom":15}],17:[function(require,module,exports){
+module.exports = CharacterCreation;
+},{"../data/UItext":3,"../data/roomcommands/charCreationPrompts":6,"../roomLib/userCreation":13,"./baseRoom":15}],17:[function(require,module,exports){
 var UItext = require('../data/UItext');
 var baseRoom = require('./baseRoom');
 
-var MainMenu = function() {
+var MainMenu = function(game) {
 	this.prototype = Object.create(baseRoom);
 	baseRoom.call(this);
 
 	var self = this;
 
 	this.init = function() {
-		self.showContent(self.content.start);
+		self.print(self.content.start);
 	};
 
 	this.commands = {
 		"new": {
 			methods: {
 				"session": {
-					type: "default",
+					type: "action",
 					scope: "game",
 					action: "newGame",
 					active: true
@@ -404,10 +486,9 @@ var MainMenu = function() {
 			description: "'new session' loads a new game."
 		},
 		"load": {
-			type: "default",
 			methods: {
 				"session": {
-					type: "default",
+					type: "action",
 					scope: "game",
 					action: "loadGame",
 					active: true
@@ -423,7 +504,7 @@ var MainMenu = function() {
 	};
 };
 
-module.exports = new MainMenu();
+module.exports = MainMenu;
 },{"../data/UItext":3,"./baseRoom":15}],18:[function(require,module,exports){
 var $ = require('jquery');
 
@@ -449,8 +530,16 @@ var ScreenRenderer = function() {
 		next();
 	};
 
-	var render = function(text) {
-		var $text = $("<P>" + text + "</p>");
+	this.echoCommand = function(command) {
+		if(typeof command === "array") {
+			command = command.join(" ");
+		}
+		render(">> " + command, "lime");
+	};
+
+	var render = function(text, color) {
+		color = color || "white";
+		var $text = $("<p style='color: "+ color +";'>" + text + "</p>");
 		$("#screen").append($text);
 	};
 };

@@ -22,8 +22,16 @@ var ScreenRenderer = function() {
 		next();
 	};
 
-	var render = function(text) {
-		var $text = $("<P>" + text + "</p>");
+	this.echoCommand = function(command) {
+		if(typeof command === "array") {
+			command = command.join(" ");
+		}
+		render(">> " + command, "lime");
+	};
+
+	var render = function(text, color) {
+		color = color || "white";
+		var $text = $("<p style='color: "+ color +";'>" + text + "</p>");
 		$("#screen").append($text);
 	};
 };

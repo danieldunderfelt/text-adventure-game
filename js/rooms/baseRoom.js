@@ -4,7 +4,7 @@ var baseRoom = function() {
 
 	var self = this;
 
-	this.showContent = function(content) {
+	this.print = function(content) {
 		output.renderSequence(content);
 	};
 };

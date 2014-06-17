@@ -1,11 +1,11 @@
 var gameActions = function(game) {
 
 	this.newGame = function() {
-		console.log("New game");
+		game.newGame();
 	};
 
 	this.loadGame = function() {
-		console.log("game loaded");
+		game.loadGame();
 	};
 
 	this.saveGame = function() {

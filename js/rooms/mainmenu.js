@@ -1,21 +1,21 @@
 var UItext = require('../data/UItext');
 var baseRoom = require('./baseRoom');
 
-var MainMenu = function() {
+var MainMenu = function(game) {
 	this.prototype = Object.create(baseRoom);
 	baseRoom.call(this);
 
 	var self = this;
 
 	this.init = function() {
-		self.showContent(self.content.start);
+		self.print(self.content.start);
 	};
 
 	this.commands = {
 		"new": {
 			methods: {
 				"session": {
-					type: "default",
+					type: "action",
 					scope: "game",
 					action: "newGame",
 					active: true
@@ -24,10 +24,9 @@ var MainMenu = function() {
 			description: "'new session' loads a new game."
 		},
 		"load": {
-			type: "default",
 			methods: {
 				"session": {
-					type: "default",
+					type: "action",
 					scope: "game",
 					action: "loadGame",
 					active: true
@@ -43,4 +42,4 @@ var MainMenu = function() {
 	};
 };
 
-module.exports = new MainMenu();
+module.exports = MainMenu;

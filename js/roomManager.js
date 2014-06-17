@@ -1,6 +1,6 @@
 var rooms = require('./data/roomlist');
 
-var roomManager = function() {
+var roomManager = function(game) {
 
 	var self = this;
 
@@ -14,9 +14,11 @@ var roomManager = function() {
 		var room = rooms[roomId];
 		
 		if(typeof room !== "undefined") {
-			self.currentRoom = room;
+			self.currentRoom = new room(game);
 			self.currentRoom.init();
 		}
+
+		return self.currentRoom;
 	};
 };
 

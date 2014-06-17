@@ -10,7 +10,7 @@ var Game = function(app) {
 
 	var self = this;
 
-	this.gameData = {};
+	this.gameData = defaultData;
 	this.inputActive = false;
 	this.previousCommands = [];
 	this.gameActions = new gameActions(this);
@@ -24,7 +24,16 @@ var Game = function(app) {
 		self.input.init();
 	};
 
-	this.loadProgress = function() {
+	this.newGame = function() {
+		self.gameData.currentRoom.roomId = "create_char";
+		self.roomManager.loadRoom(self.gameData.currentRoom.roomId);
+	};
+
+	this.loadGame = function() {
+		
+	};
+
+	var loadProgress = function() {
 		var gameSave = progress.load();
 		
 		if(gameSave === false) {
@@ -42,11 +51,40 @@ var Game = function(app) {
 	};
 
 	this.doError = function() {
-		output.renderSimple(self.currentRoom.content.commandError);
+		output.renderSimple(self.roomManager.currentRoom.content.commandError);
+	};
+
+	this.receiveData = function(data, toObject) {
+
+	};
+
+	this.doCommand = function(commandData) {
+		var action;
+
+		if(commandData.scope === "game") {
+			action = self.gameActions[commandData.action];
+		}
+		else if(commandData.scope === "room") {
+			action = self.roomManager.currentRoom[commandData.action];
+		}
+
+		if(typeof action === "undefined") {
+			self.doError();
+		}
+		else {
+			commandActions(action, commandData.fullCommand);
+		}
+	};
+
+	var commandActions = function(action, command) {
+		output.echoCommand(command);
+		self.input.cleanInput();
+		self.previousCommands.push(command);
+		action(command);
 	};
 
 	var doStartScreen = function() {
-		self.roomManager.loadRoom("mainmenu");
+		self.roomManager.loadRoom("main_menu");
 	};
 };
 

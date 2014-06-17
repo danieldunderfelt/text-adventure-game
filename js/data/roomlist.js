@@ -1,6 +1,6 @@
 var roomlist = {
-
-	"mainmenu": require('../rooms/mainmenu')
+	"main_menu": require('../rooms/mainmenu'),
+	"create_char": require('../rooms/characterCreation'),
 };
 
 module.exports = roomlist;
