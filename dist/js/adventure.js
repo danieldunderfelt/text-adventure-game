@@ -15,7 +15,7 @@ var Application = function() {
 };
 
 module.exports = Application;
-},{"./game":8,"jquery":18}],2:[function(require,module,exports){
+},{"./game":8,"jquery":19}],2:[function(require,module,exports){
 var $ = require('jquery');
 var globalCommands = require('./data/globalCommands');
 
@@ -88,7 +88,7 @@ var commandParser = function(contextCommands) {
 };
 
 module.exports = commandParser;
-},{"./data/globalCommands":5,"jquery":18}],3:[function(require,module,exports){
+},{"./data/globalCommands":5,"jquery":19}],3:[function(require,module,exports){
 var UItext = {
 
 	start: [
@@ -150,14 +150,14 @@ var roomlist = {
 };
 
 module.exports = roomlist;
-},{"../rooms/mainmenu":16}],8:[function(require,module,exports){
+},{"../rooms/mainmenu":17}],8:[function(require,module,exports){
 var $ = require('jquery');
-var rooms = require('./data/roomlist');
 var output = require('./screenrenderer');
 var gameActions = require('./gameactions');
 var defaultData = require('./data/gameData');
 var progress = require('./progress');
 var input = require('./input');
+var roomManager = require('./roomManager');
 
 var Game = function(app) {
 
@@ -165,24 +165,16 @@ var Game = function(app) {
 
 	this.gameData = {};
 	this.inputActive = false;
-	this.currentRoom = {};
 	this.previousCommands = [];
 	this.gameActions = new gameActions(this);
 	this.input = new input(this);
+	this.roomManager = new roomManager(this);
+
 	this.app = app;
 
 	this.init = function() {
 		doStartScreen();
 		self.input.init();
-	};
-
-	this.loadRoom = function(roomId) {
-		var room = rooms[roomId];
-		
-		if(typeof room !== "undefined") {
-			self.currentRoom = room;
-			self.currentRoom.init();
-		}
 	};
 
 	this.loadProgress = function() {
@@ -207,12 +199,12 @@ var Game = function(app) {
 	};
 
 	var doStartScreen = function() {
-		self.loadRoom("mainmenu");
+		self.roomManager.loadRoom("mainmenu");
 	};
 };
 
 module.exports = Game;
-},{"./data/gameData":4,"./data/roomlist":7,"./gameactions":9,"./input":11,"./progress":13,"./screenrenderer":17,"jquery":18}],9:[function(require,module,exports){
+},{"./data/gameData":4,"./gameactions":9,"./input":11,"./progress":13,"./roomManager":14,"./screenrenderer":18,"jquery":19}],9:[function(require,module,exports){
 var gameActions = function(game) {
 
 	this.newGame = function() {
@@ -241,7 +233,7 @@ $(function() {
 	window.CommandOS = new Application();
 	CommandOS.init();
 });
-},{"./app":1,"jquery":18}],11:[function(require,module,exports){
+},{"./app":1,"jquery":19}],11:[function(require,module,exports){
 var $ = require('jquery');
 var commandParser = require('./commandParser');
 
@@ -306,7 +298,7 @@ var Input = function(game) {
 };
 
 module.exports = Input;
-},{"./commandParser":2,"jquery":18}],12:[function(require,module,exports){
+},{"./commandParser":2,"jquery":19}],12:[function(require,module,exports){
 module.exports=require(6)
 },{}],13:[function(require,module,exports){
 var Progress = function() {
@@ -325,6 +317,30 @@ var Progress = function() {
 
 module.exports = new Progress();
 },{}],14:[function(require,module,exports){
+var rooms = require('./data/roomlist');
+
+var roomManager = function() {
+
+	var self = this;
+
+	this.currentRoom;
+
+	this.init = function() {
+
+	};
+
+	this.loadRoom = function(roomId) {
+		var room = rooms[roomId];
+		
+		if(typeof room !== "undefined") {
+			self.currentRoom = room;
+			self.currentRoom.init();
+		}
+	};
+};
+
+module.exports = roomManager;
+},{"./data/roomlist":7}],15:[function(require,module,exports){
 var output = require('../screenrenderer');
 
 var baseRoom = function() {
@@ -337,7 +353,7 @@ var baseRoom = function() {
 };
 
 module.exports = baseRoom;
-},{"../screenrenderer":17}],15:[function(require,module,exports){
+},{"../screenrenderer":18}],16:[function(require,module,exports){
 var commands = require('../data/roomcommands/charCreationPrompts');
 var UItext = require('../data/UItext');
 var baseRoom = require('./baseRoom');
@@ -361,7 +377,7 @@ var CharacterCreation = function() {
 };
 
 module.exports = new CharacterCreation();
-},{"../data/UItext":3,"../data/roomcommands/charCreationPrompts":6,"./baseRoom":14}],16:[function(require,module,exports){
+},{"../data/UItext":3,"../data/roomcommands/charCreationPrompts":6,"./baseRoom":15}],17:[function(require,module,exports){
 var UItext = require('../data/UItext');
 var baseRoom = require('./baseRoom');
 
@@ -408,7 +424,7 @@ var MainMenu = function() {
 };
 
 module.exports = new MainMenu();
-},{"../data/UItext":3,"./baseRoom":14}],17:[function(require,module,exports){
+},{"../data/UItext":3,"./baseRoom":15}],18:[function(require,module,exports){
 var $ = require('jquery');
 
 var ScreenRenderer = function() {
@@ -440,7 +456,7 @@ var ScreenRenderer = function() {
 };
 
 module.exports = new ScreenRenderer();
-},{"jquery":18}],18:[function(require,module,exports){
+},{"jquery":19}],19:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.1
  * http://jquery.com/
@@ -9632,4 +9648,4 @@ return jQuery;
 
 }));
 
-},{}]},{},[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17])
+},{}]},{},[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18])

@@ -1,10 +1,10 @@
 var $ = require('jquery');
-var rooms = require('./data/roomlist');
 var output = require('./screenrenderer');
 var gameActions = require('./gameactions');
 var defaultData = require('./data/gameData');
 var progress = require('./progress');
 var input = require('./input');
+var roomManager = require('./roomManager');
 
 var Game = function(app) {
 
@@ -12,24 +12,16 @@ var Game = function(app) {
 
 	this.gameData = {};
 	this.inputActive = false;
-	this.currentRoom = {};
 	this.previousCommands = [];
 	this.gameActions = new gameActions(this);
 	this.input = new input(this);
+	this.roomManager = new roomManager(this);
+
 	this.app = app;
 
 	this.init = function() {
 		doStartScreen();
 		self.input.init();
-	};
-
-	this.loadRoom = function(roomId) {
-		var room = rooms[roomId];
-		
-		if(typeof room !== "undefined") {
-			self.currentRoom = room;
-			self.currentRoom.init();
-		}
 	};
 
 	this.loadProgress = function() {
@@ -54,7 +46,7 @@ var Game = function(app) {
 	};
 
 	var doStartScreen = function() {
-		self.loadRoom("mainmenu");
+		self.roomManager.loadRoom("mainmenu");
 	};
 };
 
