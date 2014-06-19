@@ -13,13 +13,16 @@ var Game = function(app) {
 	this.gameData = defaultData;
 	this.inputActive = false;
 	this.previousCommands = [];
-	this.gameActions = new gameActions(this);
+	this.gameActions;
 	this.input = new input(this);
-	this.roomManager = new roomManager(this);
+	this.roomManager;
 
 	this.app = app;
 
 	this.init = function() {
+		self.gameActions = new gameActions(self);
+		self.roomManager = new roomManager(self);
+
 		doStartScreen();
 		self.input.init();
 	};
@@ -51,7 +54,7 @@ var Game = function(app) {
 	};
 
 	this.doError = function() {
-		output.renderSimple(self.roomManager.currentRoom.content.commandError);
+		output.renderSimple(self.roomManager.currentRoom.content.commandError, "red");
 	};
 
 	this.receiveData = function(data, toObject) {
@@ -67,6 +70,8 @@ var Game = function(app) {
 		else if(commandData.scope === "room") {
 			action = self.roomManager.currentRoom[commandData.action];
 		}
+
+		console.log(action);
 
 		if(typeof action === "undefined") {
 			self.doError();

@@ -1,22 +1,36 @@
 @import "reset";
 @import url("http://fonts.googleapis.com/css?family=Inconsolata:400,700");
 
+* {
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+html {
+	width: 100%;
+	height: 100%;
+}
+
 body {
+	margin: 0;
+	width: 100%;
+	height: 100%;
 	background: black;
 	color: white;
 	font-family: "Inconsolata", "Courier New", serif;
 }
 
 .wrapper {
-	width: 640px;
-	padding-top: 100px;
-	margin: 0 auto;
+	width: 100%;
+	height: 100%;
+	padding: 20px;
 	color: white;
 }
 
 .screen {
-	width: 640px;
-	height: 380px;
+	width: 100%;
+	height: 80%;
 	position: relative;
 	border: 1px solid white;
 	overflow: auto;
@@ -27,9 +41,11 @@ body {
 		position: absolute;
 		bottom: 0;
 		left: 0;
+		right: 0;
 
 		p {
 			margin: 20px;
+			line-height: 20px;
 		}
 	}
 }

@@ -110,6 +110,7 @@ var gameData = {
 	settings: {
 		player: {
 			name: "Proxy",
+			sex: "male",
 			stats: {
 				social: 0,
 				anarchist: 10,
@@ -176,13 +177,16 @@ var Game = function(app) {
 	this.gameData = defaultData;
 	this.inputActive = false;
 	this.previousCommands = [];
-	this.gameActions = new gameActions(this);
+	this.gameActions;
 	this.input = new input(this);
-	this.roomManager = new roomManager(this);
+	this.roomManager;
 
 	this.app = app;
 
 	this.init = function() {
+		self.gameActions = new gameActions(self);
+		self.roomManager = new roomManager(self);
+
 		doStartScreen();
 		self.input.init();
 	};
@@ -214,7 +218,7 @@ var Game = function(app) {
 	};
 
 	this.doError = function() {
-		output.renderSimple(self.roomManager.currentRoom.content.commandError);
+		output.renderSimple(self.roomManager.currentRoom.content.commandError, "red");
 	};
 
 	this.receiveData = function(data, toObject) {
@@ -230,6 +234,8 @@ var Game = function(app) {
 		else if(commandData.scope === "room") {
 			action = self.roomManager.currentRoom[commandData.action];
 		}
+
+		console.log(action);
 
 		if(typeof action === "undefined") {
 			self.doError();
@@ -352,21 +358,77 @@ module.exports = new Progress();
 var userCreation = function(room) {
 
 	var self = this;
-	var userData = {};
-	var currentStage = "";
+	var userData = room.game.gameData.settings.player;
+	var giveInputTo;
+	var availablePoints = 20;
 
 	this.begin = function() {
 		room.print(room.content.userCreation.begin);
-		currentStage = "createName";
-		return currentStage;
+		giveInputTo = self.createName;
 	};
 
 	this.receiveInput = function(input) {
-		console.log(input);
+		var acceptance = giveInputTo(input);
+		if(acceptance !== false) {
+			room.game.input.cleanInput();
+		}
 	};
 
 	this.createName = function(input) {
 		userData.name = input;
+		room.print(room.content.userCreation.confirmName, [userData.name]);
+		self.setGender(false);
+		giveInputTo = self.setGender;
+		return true;
+	};
+
+	this.setGender = function(input) {
+		if(input === false) {
+			room.print(room.content.userCreation.gender);
+		}
+		else if(input == 1 || input == 2) {
+			console.log(input);
+			userData.gender = input == 1 ? "male" : "female";
+			room.print(room.content.userCreation.confirmGender, [userData.gender]);
+			self.setStats(false);
+			giveInputTo = self.setStats;
+			return true;
+		}
+		else {
+			return false;
+		}
+	};
+
+	this.setStats = function(input) {
+		if(input === false) {
+			room.print(room.content.userCreation.stats.init);
+		}
+		else {
+			var setStat = validateStat(input);
+			
+			if(setStat === false) {
+				room.printSimple([room.content.commandError, "red"]);
+				return true;
+			}
+			else {
+				userData.stats[setStat[0]] = setStat[1];
+				availablePoints = availablePoints - setStat[1];
+				room.print(room.content.userCreation.stats.pointsCounter, [availablePoints]);
+			}
+		}
+	};
+
+	var validateStat = function(input) {
+		var parts = input.split(" ");
+		var stats = Object.keys(userData.stats);
+		var output = {};
+
+		if(stats.indexOf(parts[0]) !== -1) {
+			return parts;
+		}
+		else {
+			return false;
+		}
 	};
 };
 
@@ -404,14 +466,39 @@ var baseRoom = function() {
 
 	var self = this;
 
-	this.print = function(content) {
-		output.renderSequence(content);
+	this.print = function(content, dynamicContent) {
+		var printContent = content;
+
+		if(typeof dynamicContent !== "undefined") {
+			printContent = prepareContent(content, dynamicContent);
+		}
+
+		output.renderSequence(printContent);
+	};
+
+	this.printSimple = function(content) {
+		output.renderSimple(content);
+	}
+
+	var prepareContent = function(content, dynamicContent) {
+		var re = /(:[0-9]*)/ig;
+		for(var c = 0; c < content.length; c++) {
+			var test = content[c].match(re);
+
+			if(test !== null) {
+				for(var d = 0; d < test.length; d++) {
+					var dynIndex = parseInt(test[d].replace(":", ""), 10);
+					content[c] = content[c].replace(test[d], dynamicContent[dynIndex - 1]);
+				}
+			}
+		}
+
+		return content;
 	};
 };
 
 module.exports = baseRoom;
 },{"../screenrenderer":18}],16:[function(require,module,exports){
-var commands = require('../data/roomcommands/charCreationPrompts');
 var UItext = require('../data/UItext');
 var baseRoom = require('./baseRoom');
 var userCreation = require('../roomLib/userCreation');
@@ -421,24 +508,42 @@ var CharacterCreation = function(game) {
 	baseRoom.call(this);
 
 	var self = this;
-	this.userCreation = new userCreation(this);
+	this.game = game;
 
 	this.init = function() {
+		self.userCreation = new userCreation(self);
 		self.print(self.content.start);
 	};
 
-	this.userCreation = function() {
+	this.createUser = function() {
 		game.input.deferInput(self.userCreation.receiveInput);
 		self.userCreation.begin();
 	};
 
 	this.content = {
 		start: [
-			"/~~~/ USER CREATION /~~~/",
+			"### USER CREATION ###",
 			"You will need root access to ShadowCommand to perform your tasks. Write 'create user' to begin user creation."
 		],
 		userCreation: {
-			begin: ["Enter your desired username."]
+			begin: ["Enter username:"],
+			confirmName: ["Your username is :1"],
+			gender: ["Select your gender. Enter '1' for 'male' or '2' for 'female':"],
+			confirmGender: ["You have selected :1"],
+			stats: {
+				init: [
+					"To complete your personality profile, please assign points to the following.",
+					"Assign points by writing the name of the trait followed by how many points you want to assign to it.",
+					"The traits are:",
+					["social", "blue"],
+					["anarchist", "blue"],
+					["criminal", "blue"],
+					["intelligence", "blue"],
+					["luck", "blue"],
+					"You have 20 points left to assign. If you change your mind, just assign again."
+				],
+				pointsCounter: ["You have <span style='color: green;'>:1</span> points left to assign."]
+			}
 		},
 		commandError: "Access denied. Your instructions include all permitted actions."
 	};
@@ -449,7 +554,7 @@ var CharacterCreation = function(game) {
 				"user": {
 					type: "action",
 					scope: "room",
-					action: "userCreation",
+					action: "createUser",
 					active: true
 				}
 			},
@@ -459,7 +564,7 @@ var CharacterCreation = function(game) {
 };
 
 module.exports = CharacterCreation;
-},{"../data/UItext":3,"../data/roomcommands/charCreationPrompts":6,"../roomLib/userCreation":13,"./baseRoom":15}],17:[function(require,module,exports){
+},{"../data/UItext":3,"../roomLib/userCreation":13,"./baseRoom":15}],17:[function(require,module,exports){
 var UItext = require('../data/UItext');
 var baseRoom = require('./baseRoom');
 
@@ -512,8 +617,8 @@ var ScreenRenderer = function() {
 
 	var self = this;
 
-	this.renderSimple = function(text) {
-		render(text);
+	this.renderSimple = function(text, color) {
+		render(text, color);
 	};
 
 	this.renderSequence = function(textArray) {
@@ -531,7 +636,7 @@ var ScreenRenderer = function() {
 	};
 
 	this.echoCommand = function(command) {
-		if(typeof command === "array") {
+		if(command instanceof Array) {
 			command = command.join(" ");
 		}
 		render(">> " + command, "lime");
@@ -539,6 +644,12 @@ var ScreenRenderer = function() {
 
 	var render = function(text, color) {
 		color = color || "white";
+
+		if(text instanceof Array) {
+			color = text[1];
+			text = text[0];
+		}
+
 		var $text = $("<p style='color: "+ color +";'>" + text + "</p>");
 		$("#screen").append($text);
 	};

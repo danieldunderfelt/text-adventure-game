@@ -3,6 +3,7 @@ var gameData = {
 	settings: {
 		player: {
 			name: "Proxy",
+			sex: "male",
 			stats: {
 				social: 0,
 				anarchist: 10,
