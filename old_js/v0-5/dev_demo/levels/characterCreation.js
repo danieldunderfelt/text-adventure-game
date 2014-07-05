@@ -26,9 +26,9 @@ var CharacterCreation = function(game) {
 		],
 		userCreation: {
 			begin: ["Enter username:"],
-			confirmName: ["Your username is :1"],
-			gender: ["Select your gender. Enter '1' for 'male' or '2' for 'female':"],
-			confirmGender: ["You have selected :1"],
+			confirmName: ["Your username is <span style='color: lime;'>:1</span>"],
+			gender: ["Select your gender. Enter 'male' or 'female':"],
+			confirmGender: ["You have selected <span style='color: lime;'>:1</span>"],
 			stats: {
 				init: [
 					"To complete your personality profile, please assign points to the following.",
@@ -39,9 +39,27 @@ var CharacterCreation = function(game) {
 					["criminal", "blue"],
 					["intelligence", "blue"],
 					["luck", "blue"],
-					"You have 20 points left to assign. If you change your mind, just assign again."
+					"You have 20 points left to assign. If you change your mind, just assign again. When you are done, enter 'done'. Note that you have to assign all the points to proceed."
 				],
-				pointsCounter: ["You have <span style='color: green;'>:1</span> points left to assign."]
+				recap: [
+					"Summary of points assigned:",
+					"social = <span style='color: lime;'>:1</span>",
+					"anarchist = <span style='color: lime;'>:2</span>",
+					"criminal = <span style='color: lime;'>:3</span>",
+					"intelligence = <span style='color: lime;'>:4</span>",
+					"luck = <span style='color: lime;'>:5</span>",
+					"points left: <span style='color: lime;'>:6</span>", 
+				],
+				pointsAssignedMsg: [
+					"You assigned <span style='color: lime;'>:1</span> points to <span style='color: lime;'>:2</span>"
+				],
+				notDoneError: [
+					"You have :1 points left. Please assign them to traits before continuing."
+				],
+				notAllowedError: [
+					["Amount of points not sufficient. You have :1 points left.", "red"]
+				],
+				pointsCounter: ["You have <span style='color: lime;'>:1</span> points left to assign."]
 			}
 		},
 		commandError: "Access denied. Your instructions include all permitted actions."
@@ -58,6 +76,13 @@ var CharacterCreation = function(game) {
 				}
 			},
 			description: "'Create user' activates user creation."
+		},
+		"done": {
+			description: "Enter 'done' when you are satisfied with your character.",
+			type: "action",
+			scope: "room",
+			action: "createUser",
+			active: false
 		}
 	};
 };

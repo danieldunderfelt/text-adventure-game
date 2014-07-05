@@ -3,13 +3,13 @@ var gameData = {
 	settings: {
 		player: {
 			name: "Proxy",
-			sex: "male",
+			gender: "male",
 			stats: {
 				social: 0,
-				anarchist: 10,
-				criminal: 10,
-				intelligence: 5,
-				luck: 5
+				anarchist: 0,
+				criminal: 0,
+				intelligence: 0,
+				luck: 0
 			}
 		}
 	},

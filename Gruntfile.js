@@ -18,6 +18,23 @@ module.exports = function(grunt) {
         }
       }
     },
+    webpack: {
+      someName: {
+        // webpack options
+        entry: "./js/index.js",
+        output: {
+            path: "dist/js",
+            filename: "adventure.js",
+        },
+
+        stats: {
+            // Configure the console output
+            colors: false,
+            modules: true,
+            reasons: true
+        }
+      }
+    },
     sass: {
       dist: {
         files: {
@@ -52,7 +69,7 @@ module.exports = function(grunt) {
       },
       js: {
         files: ['js/**/*.js'],
-        tasks : ['browserify']
+        tasks : ['webpack']
       },
       gruntfile: {
         files: "Gruntfile.js"

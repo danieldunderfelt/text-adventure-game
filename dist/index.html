@@ -5,18 +5,29 @@
 	<title>text adventure game</title>
 	<link rel="stylesheet" href="css/text.css">
 
-	<script>document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')</script>
-
 	<script src="js/adventure.js"></script>
 </head>
 <body>
-	<main class="wrapper">
-		<section class="screen">
-			<div class="screen-content" id="screen">
-				
-			</div>
+	<header>
+		<a href="#" id="saveGame">Save game</a>
+		<a href="#" id="loadGame">Load game</a>
+		<a href="#" id="devCheckpoint">Dev checkpoint</a>
+	</header>
+	<div id="globalContainer" class="global-container">
+		<section class="start-screen">
+			<ul class="game-chooser" id="saveList">
+				<li>
+					<input type="radio" id="new" name="save" value="new">
+					<label for="new">New game</label>
+				</li>
+			</ul>
+			<button id="startGame" class="disabled start-btn" disabled="disabled">
+				Start
+			</button>
+			<button id="purgeSaves" class="purge-btn">
+				Remove all saves
+			</button>
 		</section>
-		<input type="text" id="input" class="main-input">
-	</main>
+	</div>
 </body>
 </html>
