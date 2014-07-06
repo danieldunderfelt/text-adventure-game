@@ -13,21 +13,22 @@
 		<a href="#" id="loadGame">Load game</a>
 		<a href="#" id="devCheckpoint">Dev checkpoint</a>
 	</header>
+	<section class="start-screen">
+		<ul class="game-chooser" id="saveList">
+			<li>
+				<input type="radio" id="new" name="save" value="new">
+				<label for="new">New game</label>
+			</li>
+		</ul>
+		<button id="startGame" class="disabled start-btn" disabled="disabled">
+			Start
+		</button>
+		<button id="purgeSaves" class="purge-btn">
+			Remove all saves
+		</button>
+	</section>
 	<div id="globalContainer" class="global-container">
-		<section class="start-screen">
-			<ul class="game-chooser" id="saveList">
-				<li>
-					<input type="radio" id="new" name="save" value="new">
-					<label for="new">New game</label>
-				</li>
-			</ul>
-			<button id="startGame" class="disabled start-btn" disabled="disabled">
-				Start
-			</button>
-			<button id="purgeSaves" class="purge-btn">
-				Remove all saves
-			</button>
-		</section>
+
 	</div>
 </body>
 </html>

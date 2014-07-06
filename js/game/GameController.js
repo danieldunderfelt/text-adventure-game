@@ -1,17 +1,15 @@
-var sceneList = require('./data/sceneList');
+var GameController = {
 
-var GameController = function(initData) {
+	saveData: {},
 
-	var self = this;
-	this.saveData = initData;
+	init: function(initData) {
+		this.saveData = initData;
+		return this;
+	},
 
-	this.init = function() {
-
-	};
-
-	this.getScene = function() {
-		return sceneList[self.saveData.currentScene];
-	};
+	getScene: function() {
+		return this.saveData.currentScene;
+	},
 };
 
 module.exports = GameController;

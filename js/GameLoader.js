@@ -62,9 +62,8 @@ var GameLoader = function() {
 	};
 
 	var initializeGame = function(saveData) {
-		var gameController = new game(saveData);
-		var gameEngine = new engine(gameController);
-		gameEngine.start();
+		game.init(saveData);
+		engine.start();
 	};
 
 	var save = function(data) {

@@ -6,7 +6,7 @@ var helpers = {
 	  target = target || {};
 	  for (var prop in source) {
 	    if (typeof source[prop] === 'object') {
-	      target[prop] = extend(target[prop], source[prop]);
+	      target[prop] = this.extend(target[prop], source[prop]);
 	    } else {
 	      target[prop] = source[prop];
 	    }

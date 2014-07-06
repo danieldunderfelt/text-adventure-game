@@ -1,5 +1,10 @@
-var sceneInterface = function(engine) {
+var engine = require('../engine');
 
+var sceneInterface = {
+
+	init: function() {
+		console.log("works!");
+	}
 };
 
-module.exports = new sceneInterface;
+module.exports = sceneInterface;

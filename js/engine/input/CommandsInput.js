@@ -1,28 +1,34 @@
 var $ = require('jquery');
 
-var CommandsInput = function(inputElement, commandHandler) {
+var CommandsInput = function() {
+	this.$input;
+	this.handler;
+};
 
-	var self = this;
-	this.$input = $("#" + inputElement);
+CommandsInput.prototype = {
 
-	this.init = function() {
-		startListeners();
-	};
+	constructor: CommandsInput,
 
-	this.cleanInput = function() {
-		self.$input.val("");
-	};
+	init: function(inputUI, handler) {
+		this.$input = $(inputUI);
+		this.handler = handler;
+		this.startListeners();
+	},
 
-	this.getInput = function(e) {
+	cleanInput: function() {
+		this.$input.val("");
+	},
+
+	getInput: function(e) {
 		if(e.keyCode === 13) {
-			var input = self.$input.val();
+			var input = this.$input.val();
 			commandHandler(input);
 		}
-	};
+	},
 
-	var startListeners = function() {
-		$(window).on("keydown.CommandsInput", self.getInput);
-	};
+	startListeners: function() {
+		$(window).on("keydown.CommandsInput", this.getInput);
+	}
 };
 
 module.exports = CommandsInput;

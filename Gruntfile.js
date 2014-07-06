@@ -69,7 +69,7 @@ module.exports = function(grunt) {
       },
       js: {
         files: ['js/**/*.js'],
-        tasks : ['webpack']
+        tasks : ['browserify']
       },
       gruntfile: {
         files: "Gruntfile.js"
