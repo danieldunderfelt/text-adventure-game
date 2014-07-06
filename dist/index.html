@@ -8,7 +8,7 @@
 	<script src="js/adventure.js"></script>
 </head>
 <body>
-	<header>
+	<header class="main">
 		<a href="#" id="saveGame">Save game</a>
 		<a href="#" id="loadGame">Load game</a>
 		<a href="#" id="devCheckpoint">Dev checkpoint</a>
@@ -16,11 +16,11 @@
 	<section class="start-screen">
 		<ul class="game-chooser" id="saveList">
 			<li>
-				<input type="radio" id="new" name="save" value="new">
+				<input type="radio" id="new" name="save" value="new" checked="checked">
 				<label for="new">New game</label>
 			</li>
 		</ul>
-		<button id="startGame" class="disabled start-btn" disabled="disabled">
+		<button id="startGame" class="disabled start-btn">
 			Start
 		</button>
 		<button id="purgeSaves" class="purge-btn">

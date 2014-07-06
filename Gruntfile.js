@@ -65,7 +65,10 @@ module.exports = function(grunt) {
       },
       css: {
         files: 'css/*.css',
-        tasks: ['autoprefixer']
+        tasks: ['autoprefixer'],
+        options: {
+          livereload: true
+        }
       },
       js: {
         files: ['js/**/*.js'],
@@ -73,10 +76,8 @@ module.exports = function(grunt) {
       },
       gruntfile: {
         files: "Gruntfile.js"
-      },
-      options: {
-        livereload: true
       }
+
     }
   });
 

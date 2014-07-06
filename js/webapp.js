@@ -8,7 +8,7 @@ var Application = function() {
     this.loadGame = "";
     this.saveSlotNames = {};
 
-    var dev = true;
+    var dev = false;
 
     this.init = function() {
         loader.initSaveSlots();
@@ -36,7 +36,8 @@ var Application = function() {
     };
 
     var setGame = function(e) {
-        self.loadGame = $(this).val();
+        console.log("checked");
+        self.loadGame = $(this).attr("checked", true).val();
         $("#startGame").attr("disabled", false);
     };
 
@@ -44,9 +45,10 @@ var Application = function() {
         var $list = $("#saveList");
 
         for(var save = 0; save < self.saveSlotNames.length; save++) {
-            var $slotRadio = $('<input type="radio" name="save" value="' + self.saveSlotNames[save] + '">');
-            var $slotLabel = $('<label></label>').text(self.saveSlotNames[save]).prepend($slotRadio);
-            var $slotUI = $('<li></li>').append($slotLabel);
+            var radioId = self.saveSlotNames[save] + '-' +Date.now();
+            var $slotRadio = $('<input type="radio" name="save" id="'+ radioId +'" value="' + self.saveSlotNames[save] + '">');
+            var $slotLabel = $('<label for="'+ radioId +'"></label>').text(self.saveSlotNames[save]);
+            var $slotUI = $('<li></li>').append($slotRadio).append($slotLabel);
 
             $list.append($slotUI);
         }
@@ -55,7 +57,8 @@ var Application = function() {
     var hideMenu = function(callback) {
         callback = callback || function() {};
 
-        $(".start-screen").fadeOut(500, callback).addClass("in-game");
+        $(".start-screen").fadeOut(500, callback);
+        $("body").addClass("in-game");
     };
 
     var beforeLoad = function() {

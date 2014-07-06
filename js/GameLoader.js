@@ -43,8 +43,10 @@ var GameLoader = function() {
 	};
 
 	this.removeAllSaves = function() {
-		self.initSaveSlots(true);
-		location.reload();
+		if(confirm("Are you sure?")) {
+			self.initSaveSlots(true);
+			location.reload();
+		}
 	};
 
 	this.loadDev = function() {

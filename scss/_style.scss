@@ -1,0 +1,115 @@
+html {
+	width: 100%;
+	height: 100%;
+}
+
+body {
+	margin: 0;
+	width: 100%;
+	height: 100%;
+	background: black;
+	color: white;
+	font-family: "Inconsolata", "Courier New", serif;
+}
+
+.start-screen {
+	width: 400px;
+	margin: 10% auto;
+
+	button {
+		padding: 20px 40px;
+		background: white;
+		border: none;
+		display: block;
+		text-align: center;
+		outline: none;
+		font-family: "Inconsolata", "Courier New", serif;
+		cursor: pointer;
+
+		&[disabled] {
+			cursor: not-allowed;
+		}
+	}
+
+	.game-chooser {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+
+		li {
+			width: 200px;
+			margin-bottom: 20px;
+
+			input[type="radio"] {
+				position: absolute;
+				left: -10000px;
+
+				&:checked + label {
+					background: lime;
+				}
+			}
+
+			label {
+				display: block;
+				width: 100%;
+				padding: 40px 0;
+				text-align: center;
+				font-size: 18px;
+				background: white;
+				color: black;
+				cursor: pointer;
+
+				&:has("input[type='radio']:checked") {
+					background: lime;
+				}
+			}
+		}
+	}
+}
+
+.game-ui {
+	display: none;
+	width: 100%;
+	height: 100%;
+	padding: 20px;
+	color: white;
+}
+
+.screen {
+	width: 100%;
+	height: 80%;
+	position: relative;
+	border: 1px solid white;
+	overflow: auto;
+
+	.screen-content {
+		width: 100%;
+		min-height: 100%;
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+
+		p {
+			margin: 20px;
+			line-height: 20px;
+		}
+	}
+}
+
+.main-input {
+	font-family: "Inconsolata", "Courier New", serif;
+	color: white;
+	display: block;
+	margin-top: 30px;
+	width: 100%;
+	font-size: 32px;
+	padding: 5px;
+	background: none;
+	border: 1px solid grey;
+	outline: none;
+
+	&:focus {
+		border: 1px solid grey;
+	}
+}
