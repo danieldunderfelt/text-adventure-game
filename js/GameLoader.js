@@ -2,88 +2,81 @@ var engine = require('./engine/engine');
 var game = require('./game/GameController');
 var saveStruct = require('./game/data/saveSchema');
 
-var GameLoader = function() {
+var GameLoader = {
 
-	var self = this;
-	var storageKey = "textadventuregame";
-	var currentSaveName = "";
-	this.slotNamesList = [];
+	storageKey: "textadventuregame",
+	currentSaveName:"",
+	slotNamesList: null,
 
-	this.initSaveSlots = function(force) {
+	initSaveSlots: function(force) {
 		force = typeof force === "undefined" ? false : force;
 
-		var extSaves = localStorage.getItem(storageKey);
+		var extSaves = localStorage.getItem(this.storageKey);
 
 		if(!extSaves || force === true) {
-			localStorage.setItem(storageKey, JSON.stringify({}));
+			localStorage.setItem(this.storageKey, JSON.stringify({}));
 		}
 
-		self.slotNamesList = getSaveList();
-	};
+		this.slotNamesList = this.getSaveList();
+	},
 
-	this.load = function(loadSave) {
+	load: function(loadSave) {
 		if(loadSave === "new") {
-			loadSave = currentSaveName;
+			loadSave = this.currentSaveName;
 		}
 
-		var saveData = getSaveData(loadSave);
+		var saveData = this.getSaveData(loadSave);
+		this.initializeGame(saveData);
+	},
 
-		initializeGame(saveData);
-	};
-
-	this.getSaves = function() {
-		return getSaveList();
-	};
-
-	this.newSave = function() {
+	newSave: function() {
 		var saveName = prompt("Give your save a name:");
-		currentSaveName = saveName;
-		saveStruct.name = currentSaveName;
-		save(saveStruct);
-	};
+		this.currentSaveName = saveName;
+		saveStruct.name = this.currentSaveName;
+		this.save(saveStruct);
+	},
 
-	this.removeAllSaves = function() {
+	removeAllSaves: function() {
 		if(confirm("Are you sure?")) {
-			self.initSaveSlots(true);
+			this.initSaveSlots(true);
 			location.reload();
 		}
-	};
+	},
 
-	this.loadDev = function() {
+	loadDev: function() {
 		var extSaves = localStorage.getItem("text_dev");
 
 		if(!extSaves) {
 			var saveData = saveStruct;
 			saveData.name = "dev";
-
-			localStorage.setItem("text_dev", JSON.stringify(saveData));
+			localStorage.setItem("text_dev", JSON.stringify({"dev": saveData}));
 		}
 
 		var devData = JSON.parse(localStorage.getItem("text_dev"))["dev"];
-		initializeGame(devData);
-	};
+		this.initializeGame(devData);
+	},
 
-	var initializeGame = function(saveData) {
+	initializeGame: function(saveData) {
 		game.init(saveData);
 		engine.start();
-	};
+	},
 
-	var save = function(data) {
-		var extSaves = JSON.parse(localStorage.getItem(storageKey));
+	save: function(data) {
+		var extSaves = JSON.parse(localStorage.getItem(this.storageKey));
 		extSaves[data.name] = data;
-		localStorage.setItem(storageKey, JSON.stringify(extSaves));
-	};
+		localStorage.setItem(this.storageKey, JSON.stringify(extSaves));
+	},
 
-	var getSaveData = function(slotName) {
-		var data = JSON.parse(localStorage.getItem(storageKey))[slotName];
+	getSaveData: function(slotName) {
+		var data = JSON.parse(localStorage.getItem(this.storageKey))[slotName];
 		return data;
-	};
+	},
 
-	var getSaveList = function() {
-		var saveSlots = JSON.parse(localStorage.getItem(storageKey));
+	getSaveList: function() {
+		var saveSlots = JSON.parse(localStorage.getItem(this.storageKey));
 		var slotNames = Object.keys(saveSlots);
 		return slotNames;
-	};
+	}
 };
 
-module.exports = new GameLoader();
+module.exports = GameLoader;

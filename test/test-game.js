@@ -81,7 +81,7 @@ var GameLoader = {
 };
 
 module.exports = GameLoader;
-},{"./engine/engine":3,"./game/GameController":16,"./game/data/saveSchema":18}],2:[function(require,module,exports){
+},{"./engine/engine":3,"./game/GameController":14,"./game/data/saveSchema":16}],2:[function(require,module,exports){
 var Container = {
 	// Available scene dependecies
 	"CommandsInput": require('../input/CommandsInput'),
@@ -112,7 +112,7 @@ var Engine = {
 };
 
 module.exports = Engine;
-},{"../game/GameController":16,"./input/InputController":6,"./lib/SceneResolver":9,"./lib/ViewLoader":10,"jquery":25}],4:[function(require,module,exports){
+},{"../game/GameController":14,"./input/InputController":6,"./lib/SceneResolver":9,"./lib/ViewLoader":10,"jquery":21}],4:[function(require,module,exports){
 var helpers = {
 	isFunction: function(obj) {
 	  return !!(obj && obj.constructor && obj.call && obj.apply);
@@ -166,7 +166,7 @@ CommandsInput.prototype = {
 };
 
 module.exports = CommandsInput;
-},{"jquery":25}],6:[function(require,module,exports){
+},{"jquery":21}],6:[function(require,module,exports){
 var CommandsInput = require('./CommandsInput');
 
 var InputController = {
@@ -229,7 +229,7 @@ var SceneResolver = {
 };
 
 module.exports = SceneResolver;
-},{"../../game/data/sceneList":19,"../data/ClassContainer":2,"../helpers":4}],10:[function(require,module,exports){
+},{"../../game/data/sceneList":17,"../data/ClassContainer":2,"../helpers":4}],10:[function(require,module,exports){
 var $ = require('jquery');
 var TextView = require('../views/TextView');
 var TerminalView = require('../views/TerminalView');
@@ -302,68 +302,7 @@ ViewLoader.prototype = {
 };
 
 module.exports = ViewLoader;
-},{"../views/TerminalView":14,"../views/TextView":15,"jquery":25}],11:[function(require,module,exports){
-var helpers = require('../helpers');
-
-var commandParser = function(availableCommands) {
-
-	this.parse = function(input) {
-		
-		var inputSegments = input.toLowerCase().split(" ");
-		var commandData = findCmdData(inputSegments);
-		if( commandData !== false ) commandData.arguments = inputSegments.splice(commandData.argumentStartIndex);
-
-		return commandData;
-	};
-
-	var findCmdData = function(inputSegments) {
-		var commandData = false;
-
-		for (var cmd in availableCommands) { 
-			if (availableCommands.hasOwnProperty(cmd) && cmd === inputSegments[0]) {
-				if( typeof availableCommands[cmd]["methods"] === "undefined" ) {
-					commandData = availableCommands[cmd];
-					commandData.fullCommand = inputSegments;
-					commandData.argumentStartIndex = 1;
-
-					break;
-				}
-				else {
-					for (var subCmd in availableCommands[cmd]["methods"]) {
-						if( availableCommands[cmd]["methods"].hasOwnProperty(subCmd) && subCmd === inputSegments[1] ) {
-							commandData = availableCommands[cmd]["methods"][subCmd];
-							commandData.fullCommand = inputSegments;
-							commandData.argumentStartIndex = 2;
-
-							break;
-						}
-					}
-				}
-			}
-		}
-
-		return commandData;
-	};
-};
-
-module.exports = commandParser;
-},{"../helpers":4}],12:[function(require,module,exports){
-var Progress = function() {
-
-	var self = this;
-
-	this.save = function(gameData) {
-		localStorage.setItem("textadventure", JSON.stringify(gameData));
-	}
-
-	this.load = function() {
-		var savedData = localStorage.getItem("textadventure");
-		return JSON.parse(savedData);
-	};
-};
-
-module.exports = new Progress();
-},{}],13:[function(require,module,exports){
+},{"../views/TerminalView":12,"../views/TextView":13,"jquery":21}],11:[function(require,module,exports){
 var $ = require('jquery');
 
 var BaseView = function($screen) {
@@ -457,7 +396,7 @@ BaseView.prototype = {
 };
 
 module.exports = BaseView;
-},{"jquery":25}],14:[function(require,module,exports){
+},{"jquery":21}],12:[function(require,module,exports){
 var $ = require('jquery');
 
 var TerminalView = function() {
@@ -485,7 +424,7 @@ var TerminalView = function() {
 };
 
 module.exports = TerminalView;
-},{"jquery":25}],15:[function(require,module,exports){
+},{"jquery":21}],13:[function(require,module,exports){
 var $ = require('jquery');
 var BaseView = require('./BaseView');
 
@@ -527,7 +466,7 @@ TextView.prototype = {
 };
 
 module.exports = TextView;
-},{"./BaseView":13,"jquery":25}],16:[function(require,module,exports){
+},{"./BaseView":11,"jquery":21}],14:[function(require,module,exports){
 var GameController = {
 
 	saveData: {},
@@ -543,7 +482,7 @@ var GameController = {
 };
 
 module.exports = GameController;
-},{}],17:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 var SceneModel = function() {};
 
 SceneModel.prototype = {
@@ -558,7 +497,7 @@ SceneModel.prototype = {
 };
 
 module.exports = SceneModel;
-},{}],18:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 var saveSchema = {
 	name: "Save",
 	player: {
@@ -571,13 +510,13 @@ var saveSchema = {
 };
 
 module.exports = saveSchema;
-},{}],19:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 var sceneList = {
 	"intro": require('../scenes/intro/intro')
 };
 
 module.exports = sceneList;
-},{"../scenes/intro/intro":22}],20:[function(require,module,exports){
+},{"../scenes/intro/intro":20}],18:[function(require,module,exports){
 var SceneModel = require('../../SceneModel');
 var data = require('./data');
 
@@ -588,7 +527,7 @@ var IntroModel = function() {
 IntroModel.prototype = Object.create(SceneModel.prototype);
 
 module.exports = IntroModel;
-},{"../../SceneModel":17,"./data":21}],21:[function(require,module,exports){
+},{"../../SceneModel":15,"./data":19}],19:[function(require,module,exports){
 var IntroData = {
 	html: 'intro.intro.html',
 	viewType: 'text',
@@ -614,7 +553,7 @@ var IntroData = {
 };
 
 module.exports = IntroData;
-},{}],22:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 var model = require('./IntroModel');
 var helpers = require('../../../engine/helpers');
 
@@ -661,90 +600,7 @@ IntroScene.prototype = {
 
 module.exports = IntroScene;
 
-},{"../../../engine/helpers":4,"./IntroModel":20}],23:[function(require,module,exports){
-var Application = require('./webapp');
-
-window.onload = function() {
-	app = new Application();
-	app.init();
-};
-},{"./webapp":24}],24:[function(require,module,exports){
-var $ = require('jquery');
-var loader = require('./GameLoader');
-
-var Application = function() {
-
-    var self = this;
-
-    this.loadGame = "";
-    this.saveSlotNames = {};
-
-    var dev = false;
-
-    this.init = function() {
-        loader.initSaveSlots();
-
-        if(dev) {
-            loader.loadDev();
-            hideMenu();
-        }
-        else {
-            self.saveSlotNames = loader.slotNamesList;
-            doMainMenu();
-        }
-    };
-
-    this.start = function() {
-        if(self.loadGame === "") {
-            self.loadGame = "new";
-        }
-        hideMenu(beforeLoad);
-    };
-
-    var doMainMenu = function() {
-        populateSaveList();
-
-        $('input[name="save"]').on("change", setGame);
-        $("#startGame").on("click", self.start);
-        $("#purgeSaves").on("click", loader.removeAllSaves);
-    };
-
-    var setGame = function(e) {
-        self.loadGame = $(this).attr("checked", true).val();
-        $("#startGame").attr("disabled", false);
-    };
-
-    var populateSaveList = function() {
-        var $list = $("#saveList");
-
-        for(var save = 0; save < self.saveSlotNames.length; save++) {
-            var radioId = self.saveSlotNames[save] + '-' +Date.now();
-            var $slotRadio = $('<input type="radio" name="save" id="'+ radioId +'" value="' + self.saveSlotNames[save] + '">');
-            var $slotLabel = $('<label for="'+ radioId +'"></label>').text(self.saveSlotNames[save]);
-            var $slotUI = $('<li></li>').append($slotRadio).append($slotLabel);
-
-            $list.append($slotUI);
-        }
-    };
-
-    var hideMenu = function(callback) {
-        callback = callback || function() {};
-
-        $(".start-screen").fadeOut(500, callback);
-        $("body").addClass("in-game");
-    };
-
-    var beforeLoad = function() {
-        if(self.loadGame === "new") {
-            loader.newSave();
-        }
-
-        loader.load(self.loadGame);
-    };
-};
-
-module.exports = Application;
-},{"./GameLoader":1,"jquery":25}],25:[function(require,module,exports){
+},{"../../../engine/helpers":4,"./IntroModel":18}],21:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.1
  * http://jquery.com/
@@ -9936,4 +9792,19 @@ return jQuery;
 
 }));
 
-},{}]},{},[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24])
+},{}],22:[function(require,module,exports){
+var game = require('../../js/game/GameController');
+var loader = require('../../js/GameLoader');
+var saveStruct = require('../../js/game/data/saveSchema');
+
+describe('#init', function() {
+
+	it('should receive save data', function() {
+		var save = saveStruct;
+		save.name = "test";
+		game.init(save);
+		expect(game.saveData).to.be.an('object');
+		expect(game.saveData).to.have.property('name', 'test');
+	});
+});
+},{"../../js/GameLoader":1,"../../js/game/GameController":14,"../../js/game/data/saveSchema":16}]},{},[22])

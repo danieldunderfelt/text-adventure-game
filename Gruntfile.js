@@ -11,10 +11,17 @@ module.exports = function(grunt) {
     browserify: {
       dist: {
         files: {
-          "dist/js/adventure.js": "js/**/*.js"
+          "dist/js/adventure.js": ["js/**/*.js"]
         },
         options: {
           transform: ['debowerify']
+        }
+      },
+      tests: {
+        files: {
+          'test/test-webapp.js': 'test/webapp/**/*.js',
+          'test/test-game.js': 'test/game/**/*.js',
+          'test/test-engine.js': 'test/engine/**/*.js',
         }
       }
     },
@@ -35,6 +42,24 @@ module.exports = function(grunt) {
         }
       }
     },
+    mocha: {
+      options: {
+        run: true,
+        reporter: "Spec",
+        log: true,
+        logErrors: true
+      },
+
+      test_webapp: {
+        src: ['test/webapp/test.html']
+      },
+      test_game: {
+        src: ['test/game/test.html']
+      },
+      test_engine: {
+        src: ['test/engine/test.html']
+      }
+    },
     sass: {
       dist: {
         files: {
@@ -52,7 +77,7 @@ module.exports = function(grunt) {
       server: {
         options: {
           port: 9001,
-          base: 'dist',
+          base: '/dist',
           keepalive: true,
           hostname: '127.0.0.1'
         }
@@ -70,9 +95,13 @@ module.exports = function(grunt) {
           livereload: true
         }
       },
+      test: {
+        files: ['test/**/*.js'],
+        tasks: ['browserify:tests', 'mocha']
+      },
       js: {
         files: ['js/**/*.js'],
-        tasks : ['browserify']
+        tasks : ['browserify', 'mocha']
       },
       gruntfile: {
         files: "Gruntfile.js"

@@ -24,6 +24,9 @@ var Application = function() {
     };
 
     this.start = function() {
+        if(self.loadGame === "") {
+            self.loadGame = "new";
+        }
         hideMenu(beforeLoad);
     };
 
@@ -36,7 +39,6 @@ var Application = function() {
     };
 
     var setGame = function(e) {
-        console.log("checked");
         self.loadGame = $(this).attr("checked", true).val();
         $("#startGame").attr("disabled", false);
     };
