@@ -1,6 +1,6 @@
 var container = require('../data/ClassContainer');
 var sceneList = require('../../game/data/sceneList');
-var helpers = require('../helpers');
+var helpers = require('../../helpers');
 
 var SceneResolver = {
 

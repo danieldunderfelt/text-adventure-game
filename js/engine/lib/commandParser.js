@@ -1,9 +1,9 @@
-var helpers = require('../helpers');
+var helpers = require('../../helpers');
 
 var commandParser = function(availableCommands) {
 
 	this.parse = function(input) {
-		
+
 		var inputSegments = input.toLowerCase().split(" ");
 		var commandData = findCmdData(inputSegments);
 		if( commandData !== false ) commandData.arguments = inputSegments.splice(commandData.argumentStartIndex);
@@ -14,7 +14,7 @@ var commandParser = function(availableCommands) {
 	var findCmdData = function(inputSegments) {
 		var commandData = false;
 
-		for (var cmd in availableCommands) { 
+		for (var cmd in availableCommands) {
 			if (availableCommands.hasOwnProperty(cmd) && cmd === inputSegments[0]) {
 				if( typeof availableCommands[cmd]["methods"] === "undefined" ) {
 					commandData = availableCommands[cmd];

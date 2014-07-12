@@ -2,7 +2,7 @@ var $ = require('jquery');
 var TextView = require('../views/TextView');
 var TerminalView = require('../views/TerminalView');
 
-var ViewLoader = function(view, type, screen, into, callback) {
+var ViewLoader = function(view, type, screen, into) {
 
 	this.container = "#globalContainer";
 
@@ -10,7 +10,7 @@ var ViewLoader = function(view, type, screen, into, callback) {
 	this.view = view;
 	this.type = type;
 	this.screen = screen;
-	this.callback = callback;
+	this.callback;
 
 	this.paths = {
 		shared: 'game/scenes/shared/html/',
@@ -20,7 +20,8 @@ var ViewLoader = function(view, type, screen, into, callback) {
 
 ViewLoader.prototype = {
 
-	render: function() {
+	render: function(callback) {
+		this.callback = callback;
 		this.into = !this.into ? this.container : this.into;
 		var path = this.view.split(".");
 
@@ -34,7 +35,10 @@ ViewLoader.prototype = {
 	},
 
 	getData: function(pathObj) {
-		var folderPath = typeof this.paths[pathObj.folder] === "undefined" ? this.paths.scenes + pathObj.folder + '/' : this.paths[pathObj.folder];
+		var folderPath = typeof this.paths[pathObj.folder] === "undefined" ?
+						 this.paths.scenes + pathObj.folder + '/' :
+						 this.paths[pathObj.folder];
+
 		var path = folderPath + pathObj.file + '.' + pathObj.type;
 
 		$.ajax({

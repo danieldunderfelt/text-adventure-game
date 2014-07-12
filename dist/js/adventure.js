@@ -81,7 +81,7 @@ var GameLoader = {
 };
 
 module.exports = GameLoader;
-},{"./engine/engine":3,"./game/GameController":16,"./game/data/saveSchema":18}],2:[function(require,module,exports){
+},{"./engine/engine":3,"./game/GameController":17,"./game/data/saveSchema":19}],2:[function(require,module,exports){
 var Container = {
 	// Available scene dependecies
 	"CommandsInput": require('../input/CommandsInput'),
@@ -112,26 +112,55 @@ var Engine = {
 };
 
 module.exports = Engine;
-},{"../game/GameController":16,"./input/InputController":6,"./lib/SceneResolver":9,"./lib/ViewLoader":10,"jquery":25}],4:[function(require,module,exports){
-var helpers = {
-	isFunction: function(obj) {
-	  return !!(obj && obj.constructor && obj.call && obj.apply);
+},{"../game/GameController":17,"./input/InputController":6,"./lib/SceneResolver":9,"./lib/ViewLoader":11,"jquery":27}],4:[function(require,module,exports){
+var $ = require('jquery');
+var helpers = require('../../helpers');
+
+var ButtonInput = function(key, target, callback) {
+
+	this.key = key || 32;
+	this.target = target || window;
+	this.callback = callback || function() {};
+
+	this.onAction = helpers.scope(this.onAction, this);
+};
+
+ButtonInput.prototype = {
+
+	constructor: ButtonInput,
+
+	listen: function() {
+		if(this.key === "mouse") {
+			this.listenMouse();
+		}
+
+		else if(typeof this.key === "number") {
+			this.listenKey();
+		}
 	},
-	extend: function(target, source) {
-	  target = target || {};
-	  for (var prop in source) {
-	    if (typeof source[prop] === 'object') {
-	      target[prop] = this.extend(target[prop], source[prop]);
-	    } else {
-	      target[prop] = source[prop];
-	    }
-	  }
-	  return target;
+
+	listenMouse: function() {
+		$(this.target).on("click.buttoninputclick", this.onAction);
+	},
+
+	listenKey: function() {
+		var self = this;
+
+		$(window).on("keydown", function(e) {
+			if(e.keyCode === self.key) {
+				self.onAction(e);
+			}
+		});
+	},
+
+	onAction: function(e) {
+		e.preventDefault();
+		callback();
 	}
 };
 
-module.exports = helpers;
-},{}],5:[function(require,module,exports){
+module.exports = ButtonInput;
+},{"../../helpers":24,"jquery":27}],5:[function(require,module,exports){
 var $ = require('jquery');
 
 var CommandsInput = function() {
@@ -166,19 +195,22 @@ CommandsInput.prototype = {
 };
 
 module.exports = CommandsInput;
-},{"jquery":25}],6:[function(require,module,exports){
+},{"jquery":27}],6:[function(require,module,exports){
 var CommandsInput = require('./CommandsInput');
+var ButtonInput = require('./ButtonInput');
 
 var InputController = {
 
 	listen: function(inputMethod) {
 		if(inputMethod === null)
+			return false;
+		if(inputMethod === "button")
 			return;
 	}
 };
 
 module.exports = InputController;
-},{"./CommandsInput":5}],7:[function(require,module,exports){
+},{"./ButtonInput":4,"./CommandsInput":5}],7:[function(require,module,exports){
 var gameActions = function(game) {
 
 	this.newGame = function() {
@@ -213,7 +245,7 @@ module.exports = sceneInterface;
 },{"../engine":3}],9:[function(require,module,exports){
 var container = require('../data/ClassContainer');
 var sceneList = require('../../game/data/sceneList');
-var helpers = require('../helpers');
+var helpers = require('../../helpers');
 
 var SceneResolver = {
 
@@ -229,174 +261,11 @@ var SceneResolver = {
 };
 
 module.exports = SceneResolver;
-},{"../../game/data/sceneList":19,"../data/ClassContainer":2,"../helpers":4}],10:[function(require,module,exports){
-var $ = require('jquery');
-var TextView = require('../views/TextView');
-var TerminalView = require('../views/TerminalView');
+},{"../../game/data/sceneList":20,"../../helpers":24,"../data/ClassContainer":2}],10:[function(require,module,exports){
+var StringReplace = {
 
-var ViewLoader = function(view, type, screen, into, callback) {
+	put: function(dynamicContent, content) {
 
-	this.container = "#globalContainer";
-
-	this.into = into;
-	this.view = view;
-	this.type = type;
-	this.screen = screen;
-	this.callback = callback;
-
-	this.paths = {
-		shared: 'game/scenes/shared/html/',
-		scenes: 'game/scenes/'
-	};
-};
-
-ViewLoader.prototype = {
-
-	render: function() {
-		this.into = !this.into ? this.container : this.into;
-		var path = this.view.split(".");
-
-		var pathObj = {
-			folder: path[0],
-			file: path[1],
-			type: path[2]
-		};
-
-		this.getData(pathObj);
-	},
-
-	getData: function(pathObj) {
-		var folderPath = typeof this.paths[pathObj.folder] === "undefined" ? this.paths.scenes + pathObj.folder + '/' : this.paths[pathObj.folder];
-		var path = folderPath + pathObj.file + '.' + pathObj.type;
-
-		$.ajax({
-			context: this,
-			url: path,
-			success: this.doRender,
-			dataType: "html"
-		});
-	},
-
-	doRender: function(data) {
-		$(this.into).html(data);
-		this.callback();
-	},
-
-	getView: function() {
-		var view;
-
-		switch(this.type) {
-			case "text":
-				view = TextView;
-				break;
-			case "terminal":
-				view = TerminalView;
-				break;
-			default:
-				view = TerminalView;
-				break;
-		}
-
-		return new view(this.screen);
-	},
-};
-
-module.exports = ViewLoader;
-},{"../views/TerminalView":14,"../views/TextView":15,"jquery":25}],11:[function(require,module,exports){
-var helpers = require('../helpers');
-
-var commandParser = function(availableCommands) {
-
-	this.parse = function(input) {
-		
-		var inputSegments = input.toLowerCase().split(" ");
-		var commandData = findCmdData(inputSegments);
-		if( commandData !== false ) commandData.arguments = inputSegments.splice(commandData.argumentStartIndex);
-
-		return commandData;
-	};
-
-	var findCmdData = function(inputSegments) {
-		var commandData = false;
-
-		for (var cmd in availableCommands) { 
-			if (availableCommands.hasOwnProperty(cmd) && cmd === inputSegments[0]) {
-				if( typeof availableCommands[cmd]["methods"] === "undefined" ) {
-					commandData = availableCommands[cmd];
-					commandData.fullCommand = inputSegments;
-					commandData.argumentStartIndex = 1;
-
-					break;
-				}
-				else {
-					for (var subCmd in availableCommands[cmd]["methods"]) {
-						if( availableCommands[cmd]["methods"].hasOwnProperty(subCmd) && subCmd === inputSegments[1] ) {
-							commandData = availableCommands[cmd]["methods"][subCmd];
-							commandData.fullCommand = inputSegments;
-							commandData.argumentStartIndex = 2;
-
-							break;
-						}
-					}
-				}
-			}
-		}
-
-		return commandData;
-	};
-};
-
-module.exports = commandParser;
-},{"../helpers":4}],12:[function(require,module,exports){
-var Progress = function() {
-
-	var self = this;
-
-	this.save = function(gameData) {
-		localStorage.setItem("textadventure", JSON.stringify(gameData));
-	}
-
-	this.load = function() {
-		var savedData = localStorage.getItem("textadventure");
-		return JSON.parse(savedData);
-	};
-};
-
-module.exports = new Progress();
-},{}],13:[function(require,module,exports){
-var $ = require('jquery');
-
-var BaseView = function($screen) {
-	this.$screen = $screen;
-};
-
-BaseView.prototype = {
-
-	renderSimple: function(text, color, effect) {
-		this.render(text, color, effect);
-	},
-
-	renderSequence: function(textArray, dynamicData, effect) {
-		var counter = 0;
-		var content = textArray;
-		var self = this;
-
-		if(typeof dynamicData !== "undefined" && dynamicData !== null) {
-			content = this.prepareContent(textArray, dynamicData);
-		}
-
-		function next() {
-			if(counter < textArray.length) {
-				self.render(content[counter], null, effect);
-				counter++;
-				setTimeout(next, 0);
-			}
-		}
-
-		next();
-	},
-
-	prepareContent: function(content, dynamicContent) {
 		var re = /(:[0-9])/ig;
 		for(var c = 0; c < content.length; c++) {
 			var test;
@@ -432,6 +301,181 @@ BaseView.prototype = {
 		}
 
 		return content;
+	}
+
+};
+
+module.exports = StringReplace;
+},{}],11:[function(require,module,exports){
+var $ = require('jquery');
+var TextView = require('../views/TextView');
+var TerminalView = require('../views/TerminalView');
+
+var ViewLoader = function(view, type, screen, into) {
+
+	this.container = "#globalContainer";
+
+	this.into = into;
+	this.view = view;
+	this.type = type;
+	this.screen = screen;
+	this.callback;
+
+	this.paths = {
+		shared: 'game/scenes/shared/html/',
+		scenes: 'game/scenes/'
+	};
+};
+
+ViewLoader.prototype = {
+
+	render: function(callback) {
+		this.callback = callback;
+		this.into = !this.into ? this.container : this.into;
+		var path = this.view.split(".");
+
+		var pathObj = {
+			folder: path[0],
+			file: path[1],
+			type: path[2]
+		};
+
+		this.getData(pathObj);
+	},
+
+	getData: function(pathObj) {
+		var folderPath = typeof this.paths[pathObj.folder] === "undefined" ?
+						 this.paths.scenes + pathObj.folder + '/' :
+						 this.paths[pathObj.folder];
+
+		var path = folderPath + pathObj.file + '.' + pathObj.type;
+
+		$.ajax({
+			context: this,
+			url: path,
+			success: this.doRender,
+			dataType: "html"
+		});
+	},
+
+	doRender: function(data) {
+		$(this.into).html(data);
+		this.callback();
+	},
+
+	getView: function() {
+		var view;
+
+		switch(this.type) {
+			case "text":
+				view = TextView;
+				break;
+			case "terminal":
+				view = TerminalView;
+				break;
+			default:
+				view = TerminalView;
+				break;
+		}
+
+		return new view(this.screen);
+	},
+};
+
+module.exports = ViewLoader;
+},{"../views/TerminalView":15,"../views/TextView":16,"jquery":27}],12:[function(require,module,exports){
+var helpers = require('../../helpers');
+
+var commandParser = function(availableCommands) {
+
+	this.parse = function(input) {
+
+		var inputSegments = input.toLowerCase().split(" ");
+		var commandData = findCmdData(inputSegments);
+		if( commandData !== false ) commandData.arguments = inputSegments.splice(commandData.argumentStartIndex);
+
+		return commandData;
+	};
+
+	var findCmdData = function(inputSegments) {
+		var commandData = false;
+
+		for (var cmd in availableCommands) {
+			if (availableCommands.hasOwnProperty(cmd) && cmd === inputSegments[0]) {
+				if( typeof availableCommands[cmd]["methods"] === "undefined" ) {
+					commandData = availableCommands[cmd];
+					commandData.fullCommand = inputSegments;
+					commandData.argumentStartIndex = 1;
+
+					break;
+				}
+				else {
+					for (var subCmd in availableCommands[cmd]["methods"]) {
+						if( availableCommands[cmd]["methods"].hasOwnProperty(subCmd) && subCmd === inputSegments[1] ) {
+							commandData = availableCommands[cmd]["methods"][subCmd];
+							commandData.fullCommand = inputSegments;
+							commandData.argumentStartIndex = 2;
+
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		return commandData;
+	};
+};
+
+module.exports = commandParser;
+},{"../../helpers":24}],13:[function(require,module,exports){
+var Progress = function() {
+
+	var self = this;
+
+	this.save = function(gameData) {
+		localStorage.setItem("textadventure", JSON.stringify(gameData));
+	}
+
+	this.load = function() {
+		var savedData = localStorage.getItem("textadventure");
+		return JSON.parse(savedData);
+	};
+};
+
+module.exports = new Progress();
+},{}],14:[function(require,module,exports){
+var $ = require('jquery');
+var StringReplace = require('../lib/StringReplace');
+
+var BaseView = function($screen) {
+	this.$screen = $screen;
+};
+
+BaseView.prototype = {
+
+	renderSimple: function(text, color, effect) {
+		this.render(text, color, effect);
+	},
+
+	renderSequence: function(textArray, dynamicData, effect) {
+		var counter = 0;
+		var content = textArray;
+		var self = this;
+
+		if(typeof dynamicData !== "undefined" && dynamicData !== null) {
+			content = StringReplace.put(dynamicData, textArray);
+		}
+
+		function next() {
+			if(counter < textArray.length) {
+				self.render(content[counter], null, effect);
+				counter++;
+				setTimeout(next, 0);
+			}
+		}
+
+		next();
 	},
 
 	render: function(text, color, effect) {
@@ -457,7 +501,7 @@ BaseView.prototype = {
 };
 
 module.exports = BaseView;
-},{"jquery":25}],14:[function(require,module,exports){
+},{"../lib/StringReplace":10,"jquery":27}],15:[function(require,module,exports){
 var $ = require('jquery');
 
 var TerminalView = function() {
@@ -485,7 +529,7 @@ var TerminalView = function() {
 };
 
 module.exports = TerminalView;
-},{"jquery":25}],15:[function(require,module,exports){
+},{"jquery":27}],16:[function(require,module,exports){
 var $ = require('jquery');
 var BaseView = require('./BaseView');
 
@@ -527,7 +571,7 @@ TextView.prototype = {
 };
 
 module.exports = TextView;
-},{"./BaseView":13,"jquery":25}],16:[function(require,module,exports){
+},{"./BaseView":14,"jquery":27}],17:[function(require,module,exports){
 var GameController = {
 
 	saveData: {},
@@ -543,7 +587,7 @@ var GameController = {
 };
 
 module.exports = GameController;
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 var SceneModel = function() {};
 
 SceneModel.prototype = {
@@ -558,7 +602,7 @@ SceneModel.prototype = {
 };
 
 module.exports = SceneModel;
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 var saveSchema = {
 	name: "Save",
 	player: {
@@ -571,13 +615,13 @@ var saveSchema = {
 };
 
 module.exports = saveSchema;
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 var sceneList = {
 	"intro": require('../scenes/intro/intro')
 };
 
 module.exports = sceneList;
-},{"../scenes/intro/intro":22}],20:[function(require,module,exports){
+},{"../scenes/intro/intro":23}],21:[function(require,module,exports){
 var SceneModel = require('../../SceneModel');
 var data = require('./data');
 
@@ -588,13 +632,13 @@ var IntroModel = function() {
 IntroModel.prototype = Object.create(SceneModel.prototype);
 
 module.exports = IntroModel;
-},{"../../SceneModel":17,"./data":21}],21:[function(require,module,exports){
+},{"../../SceneModel":18,"./data":22}],22:[function(require,module,exports){
 var IntroData = {
 	html: 'intro.intro.html',
 	viewType: 'text',
 	UIArea: '#globalContainer',
 	screen: '#introScreen',
-	input: null,
+	input: "button",
 
 	content: {
 		intro: [
@@ -614,11 +658,9 @@ var IntroData = {
 };
 
 module.exports = IntroData;
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 var model = require('./IntroModel');
-var helpers = require('../../../engine/helpers');
-
-var _bind = function(fn, me){ return function() { return fn.apply(me, arguments); }; };
+var helpers = require('../../../helpers');
 
 var IntroScene = function(viewLoader, input) {
 
@@ -627,8 +669,8 @@ var IntroScene = function(viewLoader, input) {
 	this.input = input;
 	this.model = new model();
 
-	this.play = _bind(this.play, this);
-	this.nextScene = _bind(this.nextScene, this);
+	this.play = helpers.scope(this.play, this);
+	this.nextScene = helpers.scope(this.nextScene, this);
 };
 
 IntroScene.prototype = {
@@ -640,10 +682,9 @@ IntroScene.prototype = {
 			this.model.getConfig("html"),
 			this.model.getConfig("viewType"),
 			this.model.getConfig("screen"),
-			this.model.getConfig("UIArea"),
-			this.play
+			this.model.getConfig("UIArea")
 		);
-		viewRenderer.render();
+		viewRenderer.render(this.play);
 
 		this.input.listen(this.model.getConfig("input"));
 
@@ -661,14 +702,38 @@ IntroScene.prototype = {
 
 module.exports = IntroScene;
 
-},{"../../../engine/helpers":4,"./IntroModel":20}],23:[function(require,module,exports){
+},{"../../../helpers":24,"./IntroModel":21}],24:[function(require,module,exports){
+var helpers = {
+	isFunction: function(obj) {
+	  return !!(obj && obj.constructor && obj.call && obj.apply);
+	},
+	extend: function(target, source) {
+	  target = target || {};
+	  for (var prop in source) {
+	    if (typeof source[prop] === 'object') {
+	      target[prop] = this.extend(target[prop], source[prop]);
+	    } else {
+	      target[prop] = source[prop];
+	    }
+	  }
+	  return target;
+	},
+	scope: function(fn, me) {
+		return function() {
+			return fn.apply(me, arguments);
+		};
+	}
+};
+
+module.exports = helpers;
+},{}],25:[function(require,module,exports){
 var Application = require('./webapp');
 
 window.onload = function() {
 	app = new Application();
 	app.init();
 };
-},{"./webapp":24}],24:[function(require,module,exports){
+},{"./webapp":26}],26:[function(require,module,exports){
 var $ = require('jquery');
 var loader = require('./GameLoader');
 
@@ -679,7 +744,7 @@ var Application = function() {
     this.loadGame = "";
     this.saveSlotNames = {};
 
-    var dev = false;
+    var dev = true;
 
     this.init = function() {
         loader.initSaveSlots();
@@ -744,7 +809,7 @@ var Application = function() {
 };
 
 module.exports = Application;
-},{"./GameLoader":1,"jquery":25}],25:[function(require,module,exports){
+},{"./GameLoader":1,"jquery":27}],27:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.1
  * http://jquery.com/
@@ -9936,4 +10001,4 @@ return jQuery;
 
 }));
 
-},{}]},{},[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24])
+},{}]},{},[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26])

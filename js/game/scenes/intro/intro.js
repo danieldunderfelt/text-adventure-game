@@ -1,7 +1,5 @@
 var model = require('./IntroModel');
-var helpers = require('../../../engine/helpers');
-
-var _bind = function(fn, me){ return function() { return fn.apply(me, arguments); }; };
+var helpers = require('../../../helpers');
 
 var IntroScene = function(viewLoader, input) {
 
@@ -10,8 +8,8 @@ var IntroScene = function(viewLoader, input) {
 	this.input = input;
 	this.model = new model();
 
-	this.play = _bind(this.play, this);
-	this.nextScene = _bind(this.nextScene, this);
+	this.play = helpers.scope(this.play, this);
+	this.nextScene = helpers.scope(this.nextScene, this);
 };
 
 IntroScene.prototype = {
@@ -23,10 +21,9 @@ IntroScene.prototype = {
 			this.model.getConfig("html"),
 			this.model.getConfig("viewType"),
 			this.model.getConfig("screen"),
-			this.model.getConfig("UIArea"),
-			this.play
+			this.model.getConfig("UIArea")
 		);
-		viewRenderer.render();
+		viewRenderer.render(this.play);
 
 		this.input.listen(this.model.getConfig("input"));
 

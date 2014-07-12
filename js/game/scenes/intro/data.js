@@ -3,7 +3,7 @@ var IntroData = {
 	viewType: 'text',
 	UIArea: '#globalContainer',
 	screen: '#introScreen',
-	input: null,
+	input: "button",
 
 	content: {
 		intro: [

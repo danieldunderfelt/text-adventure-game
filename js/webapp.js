@@ -8,7 +8,7 @@ var Application = function() {
     this.loadGame = "";
     this.saveSlotNames = {};
 
-    var dev = false;
+    var dev = true;
 
     this.init = function() {
         loader.initSaveSlots();

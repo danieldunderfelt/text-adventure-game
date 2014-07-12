@@ -77,7 +77,7 @@ module.exports = function(grunt) {
       server: {
         options: {
           port: 9001,
-          base: '/dist',
+          base: 'dist',
           keepalive: true,
           hostname: '127.0.0.1'
         }
@@ -90,21 +90,24 @@ module.exports = function(grunt) {
       },
       css: {
         files: 'css/*.css',
-        tasks: ['autoprefixer'],
-        options: {
-          livereload: true
-        }
+        tasks: ['autoprefixer']
       },
       test: {
         files: ['test/**/*.js'],
-        tasks: ['browserify:tests', 'mocha']
+        tasks: ['browserify:tests', 'mocha'],
+        options: {
+          livereload: false
+        }
       },
       js: {
         files: ['js/**/*.js'],
-        tasks : ['browserify', 'mocha']
+        tasks : ['browserify:dist', 'mocha']
       },
       gruntfile: {
         files: "Gruntfile.js"
+      },
+      options: {
+        livereload: true
       }
 
     }
