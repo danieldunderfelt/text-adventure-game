@@ -269,8 +269,9 @@ var resolver = require('./ClassResolver');
 var SceneLoader = {
 
 	load: function(sceneName, data) {
+		console.log(resolver); // Object {} ????
 		var scene = resolver.get(sceneName);
-
+		// get seems to be undefined ????
 		var sceneInst = new scene(
 			this.loadPaths(data.paths),
 			this.loadItems(data.items),
