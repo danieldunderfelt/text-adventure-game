@@ -1,41 +1,22 @@
-var model = require('./IntroModel');
-var helpers = require('../../../helpers');
-
-var IntroScene = function(viewLoader, input) {
-
-	this.viewLoader = viewLoader;
-	this.view;
-	this.input = input;
-	this.model = new model();
-
-	this.play = helpers.scope(this.play, this);
-	this.nextScene = helpers.scope(this.nextScene, this);
+var IntroScene = function(paths, items, interactions, characters, content, view) {
+	this.paths = paths;
+	this.items = items;
+	this.interactions = interactions;
+	this.characters = characters;
+	this.content = content;
+	this.view = view;
 };
 
 IntroScene.prototype = {
 
 	constructor: IntroScene,
 
-	init: function() {
-		var viewRenderer = new this.viewLoader(
-			this.model.getConfig("html"),
-			this.model.getConfig("viewType"),
-			this.model.getConfig("screen"),
-			this.model.getConfig("UIArea")
-		);
-		viewRenderer.render(this.play);
-
-		this.input.listen(this.model.getConfig("input"));
-
-		this.view = viewRenderer.getView();
+	start: function(state) {
+		this.view.display(this.content.start[0]);
 	},
 
-	play: function() {
-		this.view.display(this.model.getContent("intro"), "fade", this.nextScene);
-	},
-
-	nextScene: function() {
-		console.log("next scene!");
+	play: function(state) {
+		this.view.display(this.content[state.content][state.position]);
 	}
 };
 

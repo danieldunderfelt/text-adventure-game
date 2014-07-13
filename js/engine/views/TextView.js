@@ -4,33 +4,29 @@ var BaseView = require('./BaseView');
 var TextView = function(ele) {
 	this.ele = ele;
 	this.baseRenderer = new BaseView(ele);
+	this.content = [];
+	this.callback = function() {};
 };
 
 TextView.prototype = {
 
-	display: function(data, effect, callback) {
-		var counter = 0;
-		var content = data;
+	constructor: TextView,
+
+	init: function(content, callback) {
+		this.content = content;
+		this.callback = callback;
+	},
+
+	display: function(position, effect, callback) {
+		var content = this.content[position];
 		var self = this;
 
-		function next() {
-
-			if(counter < data.length) {
-				self.render(content[counter], effect);
-				counter++;
-
-				$(window).one("keydown", function(e) {
-					if(e.keyCode === 32) {
-						next();
-					}
-				});
-			}
-			else {
-				callback();
-			}
+		if(position < this.content.length) {
+			self.render(content[position], effect);
 		}
-
-		next();
+		else {
+			this.callback();
+		}
 	},
 
 	render: function(data, effect) {

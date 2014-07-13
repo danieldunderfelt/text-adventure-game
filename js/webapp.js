@@ -11,7 +11,7 @@ var Application = function() {
     var dev = true;
 
     this.init = function() {
-        loader.initSaveSlots();
+        loader.init();
 
         if(dev) {
             loader.loadDev();

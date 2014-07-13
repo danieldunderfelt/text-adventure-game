@@ -1,23 +1,15 @@
-var engine = require('./engine/engine');
 var game = require('./game/GameController');
 var saveStruct = require('./game/data/saveSchema');
+var progress = require('./progress');
 
 var GameLoader = {
 
-	storageKey: "textadventuregame",
-	currentSaveName:"",
+	currentSaveName: "",
 	slotNamesList: null,
 
-	initSaveSlots: function(force) {
-		force = typeof force === "undefined" ? false : force;
-
-		var extSaves = localStorage.getItem(this.storageKey);
-
-		if(!extSaves || force === true) {
-			localStorage.setItem(this.storageKey, JSON.stringify({}));
-		}
-
-		this.slotNamesList = this.getSaveList();
+	init: function() {
+		progress.createSaveSlots();
+		this.slotNamesList = progress.getSaveList();
 	},
 
 	load: function(loadSave) {
@@ -25,7 +17,7 @@ var GameLoader = {
 			loadSave = this.currentSaveName;
 		}
 
-		var saveData = this.getSaveData(loadSave);
+		var saveData = progress.load(loadSave);
 		this.initializeGame(saveData);
 	},
 
@@ -38,7 +30,7 @@ var GameLoader = {
 
 	removeAllSaves: function() {
 		if(confirm("Are you sure?")) {
-			this.initSaveSlots(true);
+			progress.clearSaves();
 			location.reload();
 		}
 	},
@@ -57,25 +49,8 @@ var GameLoader = {
 	},
 
 	initializeGame: function(saveData) {
-		game.init(saveData);
-		engine.start();
-	},
-
-	save: function(data) {
-		var extSaves = JSON.parse(localStorage.getItem(this.storageKey));
-		extSaves[data.name] = data;
-		localStorage.setItem(this.storageKey, JSON.stringify(extSaves));
-	},
-
-	getSaveData: function(slotName) {
-		var data = JSON.parse(localStorage.getItem(this.storageKey))[slotName];
-		return data;
-	},
-
-	getSaveList: function() {
-		var saveSlots = JSON.parse(localStorage.getItem(this.storageKey));
-		var slotNames = Object.keys(saveSlots);
-		return slotNames;
+		var GameController = new game(saveData);
+		GameController.start();
 	}
 };
 

@@ -1,17 +1,22 @@
 var helpers = require('../../helpers');
 
-var commandParser = function(availableCommands) {
+var CommandParser = function(availableCommands) {
+	this.commands = availableCommands;
+};
 
-	this.parse = function(input) {
+CommandParser.prototype = {
 
+	constructor: CommandParser,
+
+	parse: function(input) {
 		var inputSegments = input.toLowerCase().split(" ");
 		var commandData = findCmdData(inputSegments);
 		if( commandData !== false ) commandData.arguments = inputSegments.splice(commandData.argumentStartIndex);
 
 		return commandData;
-	};
+	},
 
-	var findCmdData = function(inputSegments) {
+	findCmdData: function(inputSegments) {
 		var commandData = false;
 
 		for (var cmd in availableCommands) {
@@ -38,7 +43,7 @@ var commandParser = function(availableCommands) {
 		}
 
 		return commandData;
-	};
+	}
 };
 
-module.exports = commandParser;
+module.exports = CommandParser;

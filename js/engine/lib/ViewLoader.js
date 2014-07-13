@@ -1,63 +1,18 @@
-var $ = require('jquery');
 var TextView = require('../views/TextView');
 var TerminalView = require('../views/TerminalView');
 
-var ViewLoader = function(view, type, screen, into) {
+var ViewLoader = function(screen, view) {
 
-	this.container = "#globalContainer";
-
-	this.into = into;
-	this.view = view;
-	this.type = type;
 	this.screen = screen;
-	this.callback;
-
-	this.paths = {
-		shared: 'game/scenes/shared/html/',
-		scenes: 'game/scenes/'
-	};
+	this.view = view;
 };
 
 ViewLoader.prototype = {
 
-	render: function(callback) {
-		this.callback = callback;
-		this.into = !this.into ? this.container : this.into;
-		var path = this.view.split(".");
-
-		var pathObj = {
-			folder: path[0],
-			file: path[1],
-			type: path[2]
-		};
-
-		this.getData(pathObj);
-	},
-
-	getData: function(pathObj) {
-		var folderPath = typeof this.paths[pathObj.folder] === "undefined" ?
-						 this.paths.scenes + pathObj.folder + '/' :
-						 this.paths[pathObj.folder];
-
-		var path = folderPath + pathObj.file + '.' + pathObj.type;
-
-		$.ajax({
-			context: this,
-			url: path,
-			success: this.doRender,
-			dataType: "html"
-		});
-	},
-
-	doRender: function(data) {
-		$(this.into).html(data);
-		this.callback();
-	},
-
-	getView: function() {
+	load: function() {
 		var view;
 
-		switch(this.type) {
+		switch(this.view) {
 			case "text":
 				view = TextView;
 				break;

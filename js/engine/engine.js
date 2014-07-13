@@ -1,21 +1,25 @@
-var $ = require('jquery');
-var game = require('../game/GameController');
-var resolver = require('./lib/SceneResolver');
-var viewLoader = require('./lib/ViewLoader');
-var input = require('./input/InputController');
+var resolver = require('./lib/ClassResolver');
 
 var Engine = {
-	currentScene: {},
 
-	start: function() {
-		resolver.init();
-		this.initScene();
+	input: {},
+	ui: {},
+	view: {},
+	scene: {},
+
+	init: function(gameObjects) {
+		resolver.init(gameObjects);
+
+		this.input = resolver.get("input");
+		this.ui = resolver.get("uiLoader");
+		this.view = resolver.get("viewLoader");
+		this.scene = resolver.get("sceneLoader");
 	},
 
-	initScene: function() {
-		var scene = resolver.get(game.getScene());
-		this.currentScene = new scene(viewLoader, input).init();
+	get: function(id) {
+		return resolver.get(id);
 	}
+
 };
 
 module.exports = Engine;

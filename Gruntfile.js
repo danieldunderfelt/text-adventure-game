@@ -36,9 +36,9 @@ module.exports = function(grunt) {
 
         stats: {
             // Configure the console output
-            colors: false,
-            modules: true,
-            reasons: true
+            colors: true,
+            modules: false,
+            reasons: false
         }
       }
     },
@@ -101,7 +101,7 @@ module.exports = function(grunt) {
       },
       js: {
         files: ['js/**/*.js'],
-        tasks : ['browserify:dist', 'mocha']
+        tasks : ['browserify:dist']
       },
       gruntfile: {
         files: "Gruntfile.js"

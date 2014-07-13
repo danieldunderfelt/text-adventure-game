@@ -6,7 +6,10 @@ var saveSchema = {
 	stats: {
 		timePlayed: 0
 	},
-	currentScene: "intro"
+	game: {
+		currentScene: "intro",
+		sceneStates: {}
+	}
 };
 
 module.exports = saveSchema;
