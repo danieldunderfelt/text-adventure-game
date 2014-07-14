@@ -9,7 +9,7 @@ var SceneLoader = {
 		resolver.init(objects);
 	},
 
-	load: function(sceneName, data, interface) {
+	load: function(sceneName, data, game, interface) {
 		this.interface = interface;
 		var scene = resolver.get(sceneName);
 		var sceneInst = new scene(
@@ -17,8 +17,9 @@ var SceneLoader = {
 			this.loadObjects(data.items, "item"),
 			this.loadObjects(data.interactions, "interaction"),
 			this.loadObjects(data.characters, "character"),
-			data.data,
-			this.loadView(data.view)
+			data.data.content,
+			this.loadView(data.view),
+			game
 		);
 
 		return sceneInst;

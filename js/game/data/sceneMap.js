@@ -20,6 +20,10 @@ var sceneMap = {
 			view: 'text',
 			container: '#sceneContainer',
 			screen: '#textscreen'
+		},
+		state: {
+			content: "intro",
+			position: 0
 		}
 	},
 	test1: {
@@ -45,7 +49,8 @@ var sceneMap = {
 			view: 'terminal',
 			container: '#sceneContainer',
 			screen: '#terminalscreen'
-		}
+		},
+		state: null
 	},
 	test2: {
 		scene: "test2",
@@ -70,7 +75,8 @@ var sceneMap = {
 			view: 'terminal',
 			container: '#sceneContainer',
 			screen: '#terminalscreen'
-		}
+		},
+		state: null
 	}
 };
 

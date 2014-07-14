@@ -43,10 +43,11 @@ GameController.prototype = {
 		this.currentScene = engine.sceneLoader.load(
 			sceneName,
 			this.model.getSceneData("current"),
+			this,
 			this.gameObjectInterface
 		);
 
-		this.currentScene.start();
+		this.currentScene.start(this.model.getSceneState("current"));
 	},
 
 	gameObjectInterface: function(caller, argument) {

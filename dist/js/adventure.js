@@ -236,7 +236,7 @@ var SceneLoader = {
 		resolver.init(objects);
 	},
 
-	load: function(sceneName, data, interface) {
+	load: function(sceneName, data, game, interface) {
 		this.interface = interface;
 		var scene = resolver.get(sceneName);
 		var sceneInst = new scene(
@@ -244,8 +244,9 @@ var SceneLoader = {
 			this.loadObjects(data.items, "item"),
 			this.loadObjects(data.interactions, "interaction"),
 			this.loadObjects(data.characters, "character"),
-			data.data,
-			this.loadView(data.view)
+			data.data.content,
+			this.loadView(data.view),
+			game
 		);
 
 		return sceneInst;
@@ -570,10 +571,11 @@ GameController.prototype = {
 		this.currentScene = engine.sceneLoader.load(
 			sceneName,
 			this.model.getSceneData("current"),
+			this,
 			this.gameObjectInterface
 		);
 
-		this.currentScene.start();
+		this.currentScene.start(this.model.getSceneState("current"));
 	},
 
 	gameObjectInterface: function(caller, argument) {
@@ -642,6 +644,10 @@ var sceneMap = {
 			view: 'text',
 			container: '#sceneContainer',
 			screen: '#textscreen'
+		},
+		state: {
+			content: "intro",
+			position: 0
 		}
 	},
 	test1: {
@@ -667,7 +673,8 @@ var sceneMap = {
 			view: 'terminal',
 			container: '#sceneContainer',
 			screen: '#terminalscreen'
-		}
+		},
+		state: null
 	},
 	test2: {
 		scene: "test2",
@@ -692,7 +699,8 @@ var sceneMap = {
 			view: 'terminal',
 			container: '#sceneContainer',
 			screen: '#terminalscreen'
-		}
+		},
+		state: null
 	}
 };
 
@@ -734,6 +742,39 @@ GameModel.prototype = {
 			scene = this.state.currentScene;
 		}
 		return scenemap[scene];
+	},
+
+	getSceneState: function(scene) {
+		if(scene === "current") {
+			scene = this.state.currentScene;
+		}
+		return scenemap[scene].state;
+	},
+
+	setSceneState: function(scene, values) {
+		if(scene === "current") {
+			scene = this.state.currentScene;
+		}
+		_.merge(scenemap[scene].state, values, this.stateFuncs, this);
+		return scenemap[scene].state;
+	},
+
+	stateFuncs: function(oldVal, newVal) {
+		var setVal;
+
+		switch(newVal) {
+			case "increment":
+				setVal = oldVal + 1;
+				break;
+			case "decrement":
+				setVal = oldVal - 1;
+				break;
+			default:
+				setVal = newVal;
+				break;
+		}
+
+		return setVal;
 	}
 };
 
@@ -756,11 +797,6 @@ IntroEndPath.prototype = {
 module.exports = IntroEndPath;
 },{}],23:[function(require,module,exports){
 var IntroData = {
-	state: {
-		content: "intro",
-		position: 0
-	},
-
 	content: {
 		intro: [
 			"test 1",
@@ -776,13 +812,14 @@ module.exports = IntroData;
 },{}],24:[function(require,module,exports){
 var _ = require('lodash');
 
-var IntroScene = function(paths, items, interactions, characters, data, view) {
+var IntroScene = function(paths, items, interactions, characters, content, view, controller) {
 	this.paths = paths;
 	this.items = items;
 	this.interactions = interactions;
 	this.characters = characters;
-	this.data = data;
+	this.content = content;
 	this.view = view;
+	this.game = controller;
 
 	this.renderedCallback = _.bind(this.renderedCallback, this);
 };
@@ -791,21 +828,21 @@ IntroScene.prototype = {
 
 	constructor: IntroScene,
 
-	start: function() {
-		this.view.render(this.data.content[this.data.state.content][0], this.renderedCallback);
+	start: function(state) {
+		this.view.render(this.content[state.content][state.position], this.renderedCallback);
 	},
 
 	renderedCallback: function(response) {
-		this.data.state.position++;
-		var storyLength = this.data.content[this.data.state.content].length;
+		var state = this.game.model.setSceneState("current", {position: "increment"});
+		var storyLength = this.content[state.content].length;
 
-		if(this.data.state.position >= storyLength) {
+		if(state.position >= storyLength) {
 			this.paths.next.activate();
 		}
 	},
 
 	play: function(state) {
-		this.view.render(this.data.content[this.data.state.content][this.data.state.position], this.renderedCallback);
+		this.view.render(this.content[state.content][state.position], this.renderedCallback);
 	}
 };
 

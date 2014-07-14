@@ -1,12 +1,13 @@
 var _ = require('lodash');
 
-var IntroScene = function(paths, items, interactions, characters, data, view) {
+var IntroScene = function(paths, items, interactions, characters, content, view, controller) {
 	this.paths = paths;
 	this.items = items;
 	this.interactions = interactions;
 	this.characters = characters;
-	this.data = data;
+	this.content = content;
 	this.view = view;
+	this.game = controller;
 
 	this.renderedCallback = _.bind(this.renderedCallback, this);
 };
@@ -15,21 +16,21 @@ IntroScene.prototype = {
 
 	constructor: IntroScene,
 
-	start: function() {
-		this.view.render(this.data.content[this.data.state.content][0], this.renderedCallback);
+	start: function(state) {
+		this.view.render(this.content[state.content][state.position], this.renderedCallback);
 	},
 
 	renderedCallback: function(response) {
-		this.data.state.position++;
-		var storyLength = this.data.content[this.data.state.content].length;
+		var state = this.game.model.setSceneState("current", {position: "increment"});
+		var storyLength = this.content[state.content].length;
 
-		if(this.data.state.position >= storyLength) {
+		if(state.position >= storyLength) {
 			this.paths.next.activate();
 		}
 	},
 
 	play: function(state) {
-		this.view.render(this.data.content[this.data.state.content][this.data.state.position], this.renderedCallback);
+		this.view.render(this.content[state.content][state.position], this.renderedCallback);
 	}
 };
 

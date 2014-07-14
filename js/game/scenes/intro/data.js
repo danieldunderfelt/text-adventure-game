@@ -1,9 +1,4 @@
 var IntroData = {
-	state: {
-		content: "intro",
-		position: 0
-	},
-
 	content: {
 		intro: [
 			"test 1",
