@@ -1,30 +1,24 @@
 var $ = require('jquery');
 
-var UILoader = function(html, into) {
+var UILoader = {
 
-	this.container = "#globalContainer";
+	container: "#sceneContainer",
+	into: "",
+	callback: function() {},
 
-	this.into = into;
-	this.html = html;
-	this.callback;
-
-	this.paths = {
-		shared: 'game/scenes/shared/html/',
+	paths: {
+		shared: 'game/scenes/shared/',
 		scenes: 'game/scenes/'
-	};
-};
+	},
 
-UILoader.prototype = {
-
-	render: function(callback) {
+	load: function(html, into, callback) {
 		this.callback = callback;
-		this.into = !this.into ? this.container : this.into;
-		var path = this.html.split(".");
+		this.into = !into ? this.container : into;
+		var path = html.split(".");
 
 		var pathObj = {
 			folder: path[0],
-			file: path[1],
-			type: path[2]
+			file: path[1]
 		};
 
 		this.getData(pathObj);
@@ -35,7 +29,7 @@ UILoader.prototype = {
 						 this.paths.scenes + pathObj.folder + '/' :
 						 this.paths[pathObj.folder];
 
-		var path = folderPath + pathObj.file + '.' + pathObj.type;
+		var path = folderPath + pathObj.file + '.html';
 
 		$.ajax({
 			context: this,

@@ -1,25 +1,15 @@
-var resolver = require('./lib/ClassResolver');
+var input = require('./input/InputController');
+var uiLoader = require('./lib/UILoader');
+var viewLoader = require('./lib/ViewLoader');
+var sceneLoader = require('./lib/SceneLoader');
+var commandParser = require('./lib/CommandParser');
 
 var Engine = {
-
-	input: {},
-	ui: {},
-	view: {},
-	scene: {},
-
-	init: function(gameObjects) {
-		resolver.init(gameObjects);
-
-		this.input = resolver.get("input");
-		this.ui = resolver.get("uiLoader");
-		this.view = resolver.get("viewLoader");
-		this.scene = resolver.get("sceneLoader");
-	},
-
-	get: function(id) {
-		return resolver.get(id);
-	}
-
+	input: input,
+	uiLoader: uiLoader,
+	sceneLoader: sceneLoader,
+	viewLoader: viewLoader,
+	commandParser: commandParser,
 };
 
 module.exports = Engine;

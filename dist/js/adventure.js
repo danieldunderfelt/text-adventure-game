@@ -56,44 +56,23 @@ var GameLoader = {
 };
 
 module.exports = GameLoader;
-},{"./game/GameController":16,"./game/data/saveSchema":19,"./progress":33}],2:[function(require,module,exports){
-var ClassContainer = {
-	input: require('./input/InputController'),
-	commandParser: require('./lib/CommandParser'),
-	stringReplace: require('./lib/StringReplace'),
-	viewLoader: require('./lib/ViewLoader'),
-	uiLoader: require('./lib/UILoader'),
-	sceneLoader: require('./lib/SceneLoader'),
-};
-
-module.exports = ClassContainer;
-},{"./input/InputController":6,"./lib/CommandParser":8,"./lib/SceneLoader":9,"./lib/StringReplace":10,"./lib/UILoader":11,"./lib/ViewLoader":12}],3:[function(require,module,exports){
-var resolver = require('./lib/ClassResolver');
+},{"./game/GameController":15,"./game/data/saveSchema":18,"./progress":31}],2:[function(require,module,exports){
+var input = require('./input/InputController');
+var uiLoader = require('./lib/UILoader');
+var viewLoader = require('./lib/ViewLoader');
+var sceneLoader = require('./lib/SceneLoader');
+var commandParser = require('./lib/CommandParser');
 
 var Engine = {
-
-	input: {},
-	ui: {},
-	view: {},
-	scene: {},
-
-	init: function(gameObjects) {
-		resolver.init(gameObjects);
-
-		this.input = resolver.get("input");
-		this.ui = resolver.get("uiLoader");
-		this.view = resolver.get("viewLoader");
-		this.scene = resolver.get("sceneLoader");
-	},
-
-	get: function(id) {
-		return resolver.get(id);
-	}
-
+	input: input,
+	uiLoader: uiLoader,
+	sceneLoader: sceneLoader,
+	viewLoader: viewLoader,
+	commandParser: commandParser,
 };
 
 module.exports = Engine;
-},{"./lib/ClassResolver":7}],4:[function(require,module,exports){
+},{"./input/InputController":5,"./lib/CommandParser":6,"./lib/SceneLoader":7,"./lib/UILoader":10,"./lib/ViewLoader":11}],3:[function(require,module,exports){
 var $ = require('jquery');
 var helpers = require('../../helpers');
 
@@ -126,7 +105,7 @@ ButtonInput.prototype = {
 };
 
 module.exports = ButtonInput;
-},{"../../helpers":31,"jquery":35}],5:[function(require,module,exports){
+},{"../../helpers":29,"jquery":33}],4:[function(require,module,exports){
 var $ = require('jquery');
 
 var CommandsInput = function() {
@@ -161,7 +140,7 @@ CommandsInput.prototype = {
 };
 
 module.exports = CommandsInput;
-},{"jquery":35}],6:[function(require,module,exports){
+},{"jquery":33}],5:[function(require,module,exports){
 var CommandsInput = require('./CommandsInput');
 var ButtonInput = require('./ButtonInput');
 
@@ -195,25 +174,7 @@ InputController.prototype = {
 };
 
 module.exports = InputController;
-},{"./ButtonInput":4,"./CommandsInput":5}],7:[function(require,module,exports){
-var container = require('../ClassContainer');
-var _ = require('lodash');
-
-var ClassResolver = {
-
-	gameObjectsList: {},
-
-	init: function(objects) {
-		_.merge(this.gameObjectsList, container, objects);
-	},
-
-	get: function(classId) {
-		return this.gameObjectsList[classId];
-	}
-};
-
-module.exports = ClassResolver;
-},{"../ClassContainer":2,"lodash":36}],8:[function(require,module,exports){
+},{"./ButtonInput":3,"./CommandsInput":4}],6:[function(require,module,exports){
 var helpers = require('../../helpers');
 
 var CommandParser = function(availableCommands) {
@@ -263,48 +224,83 @@ CommandParser.prototype = {
 };
 
 module.exports = CommandParser;
-},{"../../helpers":31}],9:[function(require,module,exports){
-var resolver = require('./ClassResolver');
+},{"../../helpers":29}],7:[function(require,module,exports){
+var resolver = require('./SceneResolver');
+var ViewLoader = require('./ViewLoader');
 
 var SceneLoader = {
 
-	load: function(sceneName, data) {
-		console.log(resolver); // Object {} ????
+	interface: function() {},
+
+	init: function(objects) {
+		resolver.init(objects);
+	},
+
+	load: function(sceneName, data, interface) {
+		this.interface = interface;
 		var scene = resolver.get(sceneName);
-		// get seems to be undefined ????
 		var sceneInst = new scene(
-			this.loadPaths(data.paths),
-			this.loadItems(data.items),
-			this.loadInteractions(data.interactions),
-			this.loadCharacters(data.characters),
-			data.data.content,
+			this.loadObjects(data.paths, "path"),
+			this.loadObjects(data.items, "item"),
+			this.loadObjects(data.interactions, "interaction"),
+			this.loadObjects(data.characters, "character"),
+			data.data,
 			this.loadView(data.view)
 		);
 
 		return sceneInst;
 	},
 
-	loadPaths: function(data) {
+	loadObjects: function(data, type) {
 		if(data === null) {
 			return null;
 		}
-	},
-	loadItems: function(data) {
 
-	},
-	loadInteractions: function(data) {
+		var objects = {};
+		var obj = 0;
+		var props = Object.keys(data);
 
-	},
-	loadCharacters: function(data) {
+		for(obj; obj < props.length; obj++) {
+			var sceneObj;
 
+			if(!data[props[obj]] instanceof Boolean) {
+				var objClass = resolver.get(data[props[obj]]);
+				sceneObj = new objClass(this.interface);
+			}
+			else {
+				sceneObj = data[props[obj]];
+			}
+
+			objects[props[obj]] = sceneObj;
+		}
+
+		return objects;
 	},
+
 	loadView: function(data) {
-
+		return ViewLoader.load(data.view, data.screen);
 	}
 };
 
 module.exports = SceneLoader;
-},{"./ClassResolver":7}],10:[function(require,module,exports){
+},{"./SceneResolver":8,"./ViewLoader":11}],8:[function(require,module,exports){
+var _ = require('lodash');
+
+var SceneResolver = {
+
+	gameObjectsList: {},
+
+	init: function(objects) {
+		_.merge(this.gameObjectsList, objects);
+	},
+
+	get: function(classId) {
+		return this.gameObjectsList[classId];
+	}
+};
+
+module.exports = SceneResolver;
+},{"lodash":34}],9:[function(require,module,exports){
 var StringReplace = {
 
 	put: function(dynamicContent, content) {
@@ -349,34 +345,28 @@ var StringReplace = {
 };
 
 module.exports = StringReplace;
-},{}],11:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 var $ = require('jquery');
 
-var UILoader = function(html, into) {
+var UILoader = {
 
-	this.container = "#globalContainer";
+	container: "#sceneContainer",
+	into: "",
+	callback: function() {},
 
-	this.into = into;
-	this.html = html;
-	this.callback;
-
-	this.paths = {
-		shared: 'game/scenes/shared/html/',
+	paths: {
+		shared: 'game/scenes/shared/',
 		scenes: 'game/scenes/'
-	};
-};
+	},
 
-UILoader.prototype = {
-
-	render: function(callback) {
+	load: function(html, into, callback) {
 		this.callback = callback;
-		this.into = !this.into ? this.container : this.into;
-		var path = this.html.split(".");
+		this.into = !into ? this.container : into;
+		var path = html.split(".");
 
 		var pathObj = {
 			folder: path[0],
-			file: path[1],
-			type: path[2]
+			file: path[1]
 		};
 
 		this.getData(pathObj);
@@ -387,7 +377,7 @@ UILoader.prototype = {
 						 this.paths.scenes + pathObj.folder + '/' :
 						 this.paths[pathObj.folder];
 
-		var path = folderPath + pathObj.file + '.' + pathObj.type;
+		var path = folderPath + pathObj.file + '.html';
 
 		$.ajax({
 			context: this,
@@ -404,39 +394,33 @@ UILoader.prototype = {
 };
 
 module.exports = UILoader;
-},{"jquery":35}],12:[function(require,module,exports){
+},{"jquery":33}],11:[function(require,module,exports){
 var TextView = require('../views/TextView');
 var TerminalView = require('../views/TerminalView');
 
-var ViewLoader = function(screen, view) {
+var ViewLoader = {
 
-	this.screen = screen;
-	this.view = view;
-};
+	load: function(view, screen) {
+		var viewClass;
 
-ViewLoader.prototype = {
-
-	load: function() {
-		var view;
-
-		switch(this.view) {
+		switch(view) {
 			case "text":
-				view = TextView;
+				viewClass = TextView;
 				break;
 			case "terminal":
-				view = TerminalView;
+				viewClass = TerminalView;
 				break;
 			default:
-				view = TerminalView;
+				viewClass = TerminalView;
 				break;
 		}
 
-		return new view(this.screen);
+		return new viewClass(screen);
 	},
 };
 
 module.exports = ViewLoader;
-},{"../views/TerminalView":14,"../views/TextView":15}],13:[function(require,module,exports){
+},{"../views/TerminalView":13,"../views/TextView":14}],12:[function(require,module,exports){
 var $ = require('jquery');
 var StringReplace = require('../lib/StringReplace');
 
@@ -446,11 +430,11 @@ var BaseView = function($screen) {
 
 BaseView.prototype = {
 
-	renderSimple: function(text, color, effect) {
-		this.render(text, color, effect);
+	renderSimple: function(text, color, effect, callback) {
+		this.render(text, color, effect, callback);
 	},
 
-	renderSequence: function(textArray, dynamicData, effect) {
+	renderSequence: function(textArray, dynamicData, effect, callback) {
 		var counter = 0;
 		var content = textArray;
 		var self = this;
@@ -470,7 +454,7 @@ BaseView.prototype = {
 		next();
 	},
 
-	render: function(text, color, effect) {
+	render: function(text, color, effect, callback) {
 		color = color === null ? "white" : color;
 
 		if(text instanceof Array) {
@@ -479,21 +463,21 @@ BaseView.prototype = {
 		}
 
 		var $text = $("<p style='color: "+ color +";'>" + text + "</p>");
-		this.renderEffects[effect]($text, $(this.$screen));
+		this.renderEffects[effect]($text, $(this.$screen), callback);
 	},
 
 	renderEffects: {
 
-		fade: function($text, $screen) {
+		fade: function($text, $screen, callback) {
 			$text.css("display", "none");
 			$screen.append($text);
-			$text.fadeIn(1000);
+			$text.fadeIn(1000, callback);
 		}
 	}
 };
 
 module.exports = BaseView;
-},{"../lib/StringReplace":10,"jquery":35}],14:[function(require,module,exports){
+},{"../lib/StringReplace":9,"jquery":33}],13:[function(require,module,exports){
 var $ = require('jquery');
 
 var TerminalView = function() {
@@ -521,94 +505,97 @@ var TerminalView = function() {
 };
 
 module.exports = TerminalView;
-},{"jquery":35}],15:[function(require,module,exports){
+},{"jquery":33}],14:[function(require,module,exports){
 var $ = require('jquery');
 var BaseView = require('./BaseView');
 
 var TextView = function(ele) {
 	this.ele = ele;
 	this.baseRenderer = new BaseView(ele);
-	this.content = [];
-	this.callback = function() {};
 };
 
 TextView.prototype = {
 
 	constructor: TextView,
 
-	init: function(content, callback) {
-		this.content = content;
-		this.callback = callback;
-	},
-
-	display: function(position, effect, callback) {
-		var content = this.content[position];
-		var self = this;
-
-		if(position < this.content.length) {
-			self.render(content[position], effect);
-		}
-		else {
-			this.callback();
-		}
-	},
-
-	render: function(data, effect) {
-		this.baseRenderer.renderSimple(data, null, effect);
+	render: function(data, callback) {
+		this.baseRenderer.renderSimple(data, "white", "fade", callback);
 	},
 };
 
 module.exports = TextView;
-},{"./BaseView":13,"jquery":35}],16:[function(require,module,exports){
+},{"./BaseView":12,"jquery":33}],15:[function(require,module,exports){
 var $ = require('jquery');
+var _ = require('lodash');
 var engine = require('../engine/engine');
 var scenelist = require('./data/sceneList');
 var objectslist = require('./data/objectsList');
 var helpers = require('../helpers');
 var model = require('./models/GameModel');
-var resolver = require('../engine/lib/ClassResolver');
 
 var GameController = function(saveData) {
 	this.model = new model(saveData);
+	this.loadNewScene = _.bind(this.loadNewScene, this);
 };
 
 GameController.prototype = {
 	constructor: GameController,
 	currentScene: {},
+	currentUI: {},
 
 	start: function() {
-		var gameObjects = $.extend({}, scenelist, objectslist);
-		engine.init(gameObjects);
+		var gameObjects = _.merge({}, scenelist, objectslist);
+		engine.sceneLoader.init(gameObjects);
 		this.model.init();
 		this.newScene();
 	},
 
 	newScene: function() {
-		console.log(resolver);
-		var sceneName = this.model.getCurrentScene();
-		this.currentScene = engine.scene.load(
-			sceneName,
-			this.model.getSceneData("current")
+		this.loadNewUI();
+	},
+
+	loadNewUI: function() {
+		var newUI = this.model.getCurrentUI();
+
+		this.currentUI = engine.uiLoader.load(
+			newUI.html,
+			newUI.container,
+			this.loadNewScene
 		);
-		console.log(this.currentScene);
+	},
+
+	loadNewScene: function() {
+		var sceneName = this.model.getCurrentScene();
+
+		this.currentScene = engine.sceneLoader.load(
+			sceneName,
+			this.model.getSceneData("current"),
+			this.gameObjectInterface
+		);
+
+		this.currentScene.start();
+	},
+
+	gameObjectInterface: function(caller, argument) {
+
 	}
 };
 
 module.exports = GameController;
-},{"../engine/engine":3,"../engine/lib/ClassResolver":7,"../helpers":31,"./data/objectsList":18,"./data/sceneList":20,"./models/GameModel":22,"jquery":35}],17:[function(require,module,exports){
+},{"../engine/engine":2,"../helpers":29,"./data/objectsList":17,"./data/sceneList":19,"./models/GameModel":21,"jquery":33,"lodash":34}],16:[function(require,module,exports){
 var GlobalData = {
 
 };
 
 module.exports = GlobalData;
-},{}],18:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 var objectsList = {
 	// Paths
-	path: require('../objects/paths/Path'),
+	"intro_end_path": require('../objects/paths/IntroEndPath'),
 };
 
 module.exports = objectsList;
-},{"../objects/paths/Path":24}],19:[function(require,module,exports){
+},{"../objects/paths/IntroEndPath":22}],18:[function(require,module,exports){
 var saveSchema = {
 	name: "Save",
 	player: {
@@ -624,7 +611,7 @@ var saveSchema = {
 };
 
 module.exports = saveSchema;
-},{}],20:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 var sceneList = {
 	intro: require('../scenes/intro/intro'),
 	test1: require('../scenes/test1/test1'),
@@ -632,13 +619,13 @@ var sceneList = {
 };
 
 module.exports = sceneList;
-},{"../scenes/intro/intro":26,"../scenes/test1/test1":28,"../scenes/test2/test2":30}],21:[function(require,module,exports){
+},{"../scenes/intro/intro":24,"../scenes/test1/test1":26,"../scenes/test2/test2":28}],20:[function(require,module,exports){
 var sceneMap = {
 	intro: {
 		scene: "intro",
 		data: require('../scenes/intro/data'),
 		paths: {
-			next: "test1"
+			next: "intro_end_path"
 		},
 		items: null,
 		interactions: null,
@@ -646,20 +633,28 @@ var sceneMap = {
 		input: {
 			type: "button",
 			config: {
-				key: 32
+				key: 32,
+				command: "continue"
 			}
 		},
 		view: {
 			html: 'shared.text',
 			view: 'text',
 			container: '#sceneContainer',
-			screen: '#textcreen'
+			screen: '#textscreen'
 		}
 	},
 	test1: {
 		scene: "test1",
 		data: require('../scenes/test1/data'),
-		paths: null,
+		paths: {
+			forward: {
+				object: "path",
+				leadsTo: "test2",
+				description: "Go to test2!"
+			},
+			back: false
+		},
 		items: null,
 		interactions: null,
 		characters: null,
@@ -677,7 +672,14 @@ var sceneMap = {
 	test2: {
 		scene: "test2",
 		data: require('../scenes/test2/data'),
-		paths: null,
+		paths: {
+			forward: {
+				object: "path",
+				leadsTo: "intro",
+				description: "Go back to intro!"
+			},
+			back: true
+		},
 		items: null,
 		interactions: null,
 		characters: null,
@@ -695,7 +697,7 @@ var sceneMap = {
 };
 
 module.exports = sceneMap;
-},{"../scenes/intro/data":25,"../scenes/test1/data":27,"../scenes/test2/data":29}],22:[function(require,module,exports){
+},{"../scenes/intro/data":23,"../scenes/test1/data":25,"../scenes/test2/data":27}],21:[function(require,module,exports){
 var data = require('../data/global');
 var scenemap = require('../data/sceneMap');
 var _ = require('lodash');
@@ -717,6 +719,11 @@ GameModel.prototype = {
 		return this.state.currentScene;
 	},
 
+	getCurrentUI: function() {
+		var sceneName = this.getCurrentScene();
+		return scenemap[sceneName].view;
+	},
+
 	setCurrentScene: function(sceneId) {
 		this.state.currentScene = sceneId;
 		return sceneId;
@@ -731,47 +738,23 @@ GameModel.prototype = {
 };
 
 module.exports = GameModel;
-},{"../data/global":17,"../data/sceneMap":21,"lodash":36}],23:[function(require,module,exports){
-var BaseObject = function() {};
+},{"../data/global":16,"../data/sceneMap":20,"lodash":34}],22:[function(require,module,exports){
+var IntroEndPath = function(callback) {
+	this.callback = callback;
+}
 
-BaseObject.prototype = {
-	constructor: BaseObject,
+IntroEndPath.prototype = {
+	leadsTo: "test1",
+	description: "Begin the game",
+	locked: false,
 
 	activate: function() {
-
-	},
-
-	describe: function() {
-
-	},
-
-	take: function() {
-
-	},
-
-	discard: function() {
-
+		callback(this.leadsTo);
 	}
 }
 
-module.exports = BaseObject;
-},{}],24:[function(require,module,exports){
-var BaseObject = require('../BaseObject');
-
-var Path = function(direction, leadsTo) {
-	this.type = "path";
-	this.direction = direction;
-	this.leadsTo = leadsTo;
-};
-
-Path.prototype = Object.create(BaseObject.prototype);
-
-Path.prototype.activate = function() {
-
-};
-
-module.exports = Path;
-},{"../BaseObject":23}],25:[function(require,module,exports){
+module.exports = IntroEndPath;
+},{}],23:[function(require,module,exports){
 var IntroData = {
 	state: {
 		content: "intro",
@@ -790,40 +773,87 @@ var IntroData = {
 };
 
 module.exports = IntroData;
-},{}],26:[function(require,module,exports){
-var IntroScene = function(paths, items, interactions, characters, content, view) {
+},{}],24:[function(require,module,exports){
+var _ = require('lodash');
+
+var IntroScene = function(paths, items, interactions, characters, data, view) {
 	this.paths = paths;
 	this.items = items;
 	this.interactions = interactions;
 	this.characters = characters;
-	this.content = content;
+	this.data = data;
 	this.view = view;
+
+	this.renderedCallback = _.bind(this.renderedCallback, this);
 };
 
 IntroScene.prototype = {
 
 	constructor: IntroScene,
 
-	start: function(state) {
-		this.view.display(this.content.start[0]);
+	start: function() {
+		this.view.render(this.data.content[this.data.state.content][0], this.renderedCallback);
+	},
+
+	renderedCallback: function(response) {
+		this.data.state.position++;
+		var storyLength = this.data.content[this.data.state.content].length;
+
+		if(this.data.state.position >= storyLength) {
+			this.paths.next.activate();
+		}
 	},
 
 	play: function(state) {
-		this.view.display(this.content[state.content][state.position]);
+		this.view.render(this.data.content[this.data.state.content][this.data.state.position], this.renderedCallback);
 	}
 };
 
 module.exports = IntroScene;
 
-},{}],27:[function(require,module,exports){
-module.exports=require(25)
-},{}],28:[function(require,module,exports){
+},{"lodash":34}],25:[function(require,module,exports){
+var IntroData = {
+	state: {
+		content: "init",
+		position: 0
+	},
 
+	content: {
+		init: [
+			"scene test 1",
+			"test 2",
+			"test 3",
+			"test 4",
+			"test 5"
+		]
+	}
+};
+
+module.exports = IntroData;
+},{}],26:[function(require,module,exports){
+
+},{}],27:[function(require,module,exports){
+var IntroData = {
+	state: {
+		content: "init",
+		position: 0
+	},
+
+	content: {
+		init: [
+			"scene test 2",
+			"hahaha",
+			"hohohop",
+			"lolol",
+			"derpaderpa"
+		]
+	}
+};
+
+module.exports = IntroData;
+},{}],28:[function(require,module,exports){
+module.exports=require(26)
 },{}],29:[function(require,module,exports){
-module.exports=require(25)
-},{}],30:[function(require,module,exports){
-module.exports=require(28)
-},{}],31:[function(require,module,exports){
 var helpers = {
 	isFunction: function(obj) {
 	  return !!(obj && obj.constructor && obj.call && obj.apply);
@@ -847,14 +877,14 @@ var helpers = {
 };
 
 module.exports = helpers;
-},{}],32:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 var Application = require('./webapp');
 
 window.onload = function() {
 	app = new Application();
 	app.init();
 };
-},{"./webapp":34}],33:[function(require,module,exports){
+},{"./webapp":32}],31:[function(require,module,exports){
 var Progress = {
 
 	storageKey: "textadventuregame",
@@ -889,7 +919,7 @@ var Progress = {
 };
 
 module.exports = Progress;
-},{}],34:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 var $ = require('jquery');
 var loader = require('./GameLoader');
 
@@ -965,7 +995,7 @@ var Application = function() {
 };
 
 module.exports = Application;
-},{"./GameLoader":1,"jquery":35}],35:[function(require,module,exports){
+},{"./GameLoader":1,"jquery":33}],33:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.1
  * http://jquery.com/
@@ -10157,7 +10187,7 @@ return jQuery;
 
 }));
 
-},{}],36:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 (function (global){
 /**
  * @license
@@ -16946,4 +16976,4 @@ return jQuery;
 }.call(this));
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}]},{},[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34])
+},{}]},{},[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32])

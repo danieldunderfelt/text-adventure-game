@@ -1,30 +1,24 @@
 var TextView = require('../views/TextView');
 var TerminalView = require('../views/TerminalView');
 
-var ViewLoader = function(screen, view) {
+var ViewLoader = {
 
-	this.screen = screen;
-	this.view = view;
-};
+	load: function(view, screen) {
+		var viewClass;
 
-ViewLoader.prototype = {
-
-	load: function() {
-		var view;
-
-		switch(this.view) {
+		switch(view) {
 			case "text":
-				view = TextView;
+				viewClass = TextView;
 				break;
 			case "terminal":
-				view = TerminalView;
+				viewClass = TerminalView;
 				break;
 			default:
-				view = TerminalView;
+				viewClass = TerminalView;
 				break;
 		}
 
-		return new view(this.screen);
+		return new viewClass(screen);
 	},
 };
 

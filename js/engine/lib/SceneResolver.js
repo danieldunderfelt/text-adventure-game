@@ -1,12 +1,11 @@
-var container = require('../ClassContainer');
 var _ = require('lodash');
 
-var ClassResolver = {
+var SceneResolver = {
 
 	gameObjectsList: {},
 
 	init: function(objects) {
-		_.merge(this.gameObjectsList, container, objects);
+		_.merge(this.gameObjectsList, objects);
 	},
 
 	get: function(classId) {
@@ -14,4 +13,4 @@ var ClassResolver = {
 	}
 };
 
-module.exports = ClassResolver;
+module.exports = SceneResolver;

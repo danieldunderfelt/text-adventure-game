@@ -1,39 +1,57 @@
-var resolver = require('./ClassResolver');
+var resolver = require('./SceneResolver');
+var ViewLoader = require('./ViewLoader');
 
 var SceneLoader = {
 
-	load: function(sceneName, data) {
-		console.log(resolver); // Object {} ????
+	interface: function() {},
+
+	init: function(objects) {
+		resolver.init(objects);
+	},
+
+	load: function(sceneName, data, interface) {
+		this.interface = interface;
 		var scene = resolver.get(sceneName);
-		// get seems to be undefined ????
 		var sceneInst = new scene(
-			this.loadPaths(data.paths),
-			this.loadItems(data.items),
-			this.loadInteractions(data.interactions),
-			this.loadCharacters(data.characters),
-			data.data.content,
+			this.loadObjects(data.paths, "path"),
+			this.loadObjects(data.items, "item"),
+			this.loadObjects(data.interactions, "interaction"),
+			this.loadObjects(data.characters, "character"),
+			data.data,
 			this.loadView(data.view)
 		);
 
 		return sceneInst;
 	},
 
-	loadPaths: function(data) {
+	loadObjects: function(data, type) {
 		if(data === null) {
 			return null;
 		}
-	},
-	loadItems: function(data) {
 
-	},
-	loadInteractions: function(data) {
+		var objects = {};
+		var obj = 0;
+		var props = Object.keys(data);
 
-	},
-	loadCharacters: function(data) {
+		for(obj; obj < props.length; obj++) {
+			var sceneObj;
 
+			if(!data[props[obj]] instanceof Boolean) {
+				var objClass = resolver.get(data[props[obj]]);
+				sceneObj = new objClass(this.interface);
+			}
+			else {
+				sceneObj = data[props[obj]];
+			}
+
+			objects[props[obj]] = sceneObj;
+		}
+
+		return objects;
 	},
+
 	loadView: function(data) {
-
+		return ViewLoader.load(data.view, data.screen);
 	}
 };
 

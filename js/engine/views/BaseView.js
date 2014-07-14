@@ -7,11 +7,11 @@ var BaseView = function($screen) {
 
 BaseView.prototype = {
 
-	renderSimple: function(text, color, effect) {
-		this.render(text, color, effect);
+	renderSimple: function(text, color, effect, callback) {
+		this.render(text, color, effect, callback);
 	},
 
-	renderSequence: function(textArray, dynamicData, effect) {
+	renderSequence: function(textArray, dynamicData, effect, callback) {
 		var counter = 0;
 		var content = textArray;
 		var self = this;
@@ -31,7 +31,7 @@ BaseView.prototype = {
 		next();
 	},
 
-	render: function(text, color, effect) {
+	render: function(text, color, effect, callback) {
 		color = color === null ? "white" : color;
 
 		if(text instanceof Array) {
@@ -40,15 +40,15 @@ BaseView.prototype = {
 		}
 
 		var $text = $("<p style='color: "+ color +";'>" + text + "</p>");
-		this.renderEffects[effect]($text, $(this.$screen));
+		this.renderEffects[effect]($text, $(this.$screen), callback);
 	},
 
 	renderEffects: {
 
-		fade: function($text, $screen) {
+		fade: function($text, $screen, callback) {
 			$text.css("display", "none");
 			$screen.append($text);
-			$text.fadeIn(1000);
+			$text.fadeIn(1000, callback);
 		}
 	}
 };

@@ -19,6 +19,11 @@ GameModel.prototype = {
 		return this.state.currentScene;
 	},
 
+	getCurrentUI: function() {
+		var sceneName = this.getCurrentScene();
+		return scenemap[sceneName].view;
+	},
+
 	setCurrentScene: function(sceneId) {
 		this.state.currentScene = sceneId;
 		return sceneId;

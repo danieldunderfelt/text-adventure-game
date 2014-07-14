@@ -1,12 +1,12 @@
 var IntroData = {
 	state: {
-		content: "intro",
+		content: "init",
 		position: 0
 	},
 
 	content: {
-		intro: [
-			"test 1",
+		init: [
+			"scene test 1",
 			"test 2",
 			"test 3",
 			"test 4",
