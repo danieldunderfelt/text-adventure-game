@@ -1,1038 +1,242 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var game = require('./game/GameController');
-var saveStruct = require('./game/data/saveSchema');
-var progress = require('./progress');
+"use strict";
+Object.defineProperties(exports, {
+  default: {get: function() {
+      return $__default;
+    }},
+  __esModule: {value: true}
+});
+var GameLoader = function GameLoader() {};
+($traceurRuntime.createClass)(GameLoader, {}, {});
+var $__default = GameLoader;
 
-var GameLoader = {
-
-	currentSaveName: "",
-	slotNamesList: null,
-
-	init: function() {
-		progress.createSaveSlots();
-		this.slotNamesList = progress.getSaveList();
-	},
-
-	load: function(loadSave) {
-		if(loadSave === "new") {
-			loadSave = this.currentSaveName;
-		}
-
-		var saveData = progress.load(loadSave);
-		this.initializeGame(saveData);
-	},
-
-	newSave: function() {
-		var saveName = prompt("Give your save a name:");
-		this.currentSaveName = saveName;
-		saveStruct.name = this.currentSaveName;
-		this.save(saveStruct);
-	},
-
-	removeAllSaves: function() {
-		if(confirm("Are you sure?")) {
-			progress.clearSaves();
-			location.reload();
-		}
-	},
-
-	loadDev: function() {
-		var extSaves = localStorage.getItem("text_dev");
-
-		if(!extSaves) {
-			var saveData = saveStruct;
-			saveData.name = "dev";
-			localStorage.setItem("text_dev", JSON.stringify({"dev": saveData}));
-		}
-
-		var devData = JSON.parse(localStorage.getItem("text_dev"))["dev"];
-		this.initializeGame(devData);
-	},
-
-	initializeGame: function(saveData) {
-		var GameController = new game(saveData);
-		GameController.start();
-	}
-};
-
-module.exports = GameLoader;
-},{"./game/GameController":15,"./game/data/saveSchema":18,"./progress":31}],2:[function(require,module,exports){
-var input = require('./input/InputController');
-var uiLoader = require('./lib/UILoader');
-var viewLoader = require('./lib/ViewLoader');
-var sceneLoader = require('./lib/SceneLoader');
-var commandParser = require('./lib/CommandParser');
-
-var Engine = {
-	input: input,
-	uiLoader: uiLoader,
-	sceneLoader: sceneLoader,
-	viewLoader: viewLoader,
-	commandParser: commandParser,
-};
-
-module.exports = Engine;
-},{"./input/InputController":5,"./lib/CommandParser":6,"./lib/SceneLoader":7,"./lib/UILoader":10,"./lib/ViewLoader":11}],3:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
+"use strict";
 var $ = require('jquery');
-var helpers = require('../../helpers');
-
-var ButtonInput = function(key, callback) {
-
-	this.key = key || 32; // space
-	this.callback = callback || function() {};
-
-	this.onAction = helpers.scope(this.onAction, this);
-};
-
-ButtonInput.prototype = {
-
-	constructor: ButtonInput,
-
-	listen: function() {
-		var self = this;
-
-		$(window).on("keydown", function(e) {
-			if(e.keyCode === self.key) {
-				self.onAction(e);
-			}
-		});
-	},
-
-	onAction: function(e) {
-		e.preventDefault();
-		callback();
-	}
-};
-
-module.exports = ButtonInput;
-},{"../../helpers":29,"jquery":33}],4:[function(require,module,exports){
-var $ = require('jquery');
-
-var CommandsInput = function() {
-	this.$input;
-	this.handler;
-};
-
-CommandsInput.prototype = {
-
-	constructor: CommandsInput,
-
-	init: function(inputUI, handler) {
-		this.$input = $(inputUI);
-		this.handler = handler;
-		this.startListeners();
-	},
-
-	cleanInput: function() {
-		this.$input.val("");
-	},
-
-	getInput: function(e) {
-		if(e.keyCode === 13) {
-			var input = this.$input.val();
-			commandHandler(input);
-		}
-	},
-
-	startListeners: function() {
-		$(window).on("keydown.CommandsInput", this.getInput);
-	}
-};
-
-module.exports = CommandsInput;
-},{"jquery":33}],5:[function(require,module,exports){
-var CommandsInput = require('./CommandsInput');
-var ButtonInput = require('./ButtonInput');
-
-var InputController = function(inputMethod, config, callback) {
-	this.method = inputMethod;
-	this.config = config;
-	this.callback = callback;
-};
-
-InputController.prototype = {
-
-	constructor: InputController,
-
-	listen: function() {
-		var inputHandler;
-
-		switch(this.Method) {
-			case null:
-				inputHandler = false;
-				break;
-			case "button":
-				inputHandler = ButtonInput;
-				break;
-			default:
-				inputHandler = CommandsInput;
-				break;
-		}
-
-		inputHandler.listen(this.config, this.callback);
-	}
-};
-
-module.exports = InputController;
-},{"./ButtonInput":3,"./CommandsInput":4}],6:[function(require,module,exports){
-var helpers = require('../../helpers');
-
-var CommandParser = function(availableCommands) {
-	this.commands = availableCommands;
-};
-
-CommandParser.prototype = {
-
-	constructor: CommandParser,
-
-	parse: function(input) {
-		var inputSegments = input.toLowerCase().split(" ");
-		var commandData = findCmdData(inputSegments);
-		if( commandData !== false ) commandData.arguments = inputSegments.splice(commandData.argumentStartIndex);
-
-		return commandData;
-	},
-
-	findCmdData: function(inputSegments) {
-		var commandData = false;
-
-		for (var cmd in availableCommands) {
-			if (availableCommands.hasOwnProperty(cmd) && cmd === inputSegments[0]) {
-				if( typeof availableCommands[cmd]["methods"] === "undefined" ) {
-					commandData = availableCommands[cmd];
-					commandData.fullCommand = inputSegments;
-					commandData.argumentStartIndex = 1;
-
-					break;
-				}
-				else {
-					for (var subCmd in availableCommands[cmd]["methods"]) {
-						if( availableCommands[cmd]["methods"].hasOwnProperty(subCmd) && subCmd === inputSegments[1] ) {
-							commandData = availableCommands[cmd]["methods"][subCmd];
-							commandData.fullCommand = inputSegments;
-							commandData.argumentStartIndex = 2;
-
-							break;
-						}
-					}
-				}
-			}
-		}
-
-		return commandData;
-	}
-};
-
-module.exports = CommandParser;
-},{"../../helpers":29}],7:[function(require,module,exports){
-var resolver = require('./SceneResolver');
-var ViewLoader = require('./ViewLoader');
-
-var SceneLoader = {
-
-	interface: function() {},
-
-	init: function(objects) {
-		resolver.init(objects);
-	},
-
-	load: function(sceneName, data, game, interface) {
-		this.interface = interface;
-		var scene = resolver.get(sceneName);
-		var sceneInst = new scene(
-			this.loadObjects(data.paths, "path"),
-			this.loadObjects(data.items, "item"),
-			this.loadObjects(data.interactions, "interaction"),
-			this.loadObjects(data.characters, "character"),
-			data.data.content,
-			this.loadView(data.view),
-			game
-		);
-
-		return sceneInst;
-	},
-
-	loadObjects: function(data, type) {
-		if(data === null) {
-			return null;
-		}
-
-		var objects = {};
-		var obj = 0;
-		var props = Object.keys(data);
-
-		for(obj; obj < props.length; obj++) {
-			var sceneObj;
-
-			if(!data[props[obj]] instanceof Boolean) {
-				var objClass = resolver.get(data[props[obj]]);
-				sceneObj = new objClass(this.interface);
-			}
-			else {
-				sceneObj = data[props[obj]];
-			}
-
-			objects[props[obj]] = sceneObj;
-		}
-
-		return objects;
-	},
-
-	loadView: function(data) {
-		return ViewLoader.load(data.view, data.screen);
-	}
-};
-
-module.exports = SceneLoader;
-},{"./SceneResolver":8,"./ViewLoader":11}],8:[function(require,module,exports){
+var GameLoader = require('./GameLoader');
 var _ = require('lodash');
-
-var SceneResolver = {
-
-	gameObjectsList: {},
-
-	init: function(objects) {
-		_.merge(this.gameObjectsList, objects);
-	},
-
-	get: function(classId) {
-		return this.gameObjectsList[classId];
-	}
+var Application = function Application() {
+  this.loader = new GameLoader();
+  this.loadGame = "";
+  this.dev = false;
 };
-
-module.exports = SceneResolver;
-},{"lodash":34}],9:[function(require,module,exports){
-var StringReplace = {
-
-	put: function(dynamicContent, content) {
-
-		var re = /(:[0-9])/ig;
-		for(var c = 0; c < content.length; c++) {
-			var test;
-			var contentIsArray = false;
-
-			if(content[c] instanceof Array) {
-				test = content[c][0].match(re);
-				contentIsArray = true;
-			}
-			else if (typeof content[c] ===  "string") {
-				test = content[c].match(re);
-			}
-			else {
-				throw "Content must be array or string.";
-			}
-
-			if(test !== null) {
-				for(var d = 0; d < test.length; d++) {
-					var dynIndex = parseInt(test[d].replace(":", ""), 10);
-					var preparedContent;
-					var replacement = dynamicContent[dynIndex - 1];
-
-					if(contentIsArray === true) {
-						preparedContent = content[c][0].replace(test[d], replacement);
-						content[c][0] = preparedContent;
-					}
-					else {
-						preparedContent = content[c].replace(test[d], replacement);
-						content[c] = preparedContent;
-					}
-				}
-			}
-		}
-
-		return content;
-	}
-
-};
-
-module.exports = StringReplace;
-},{}],10:[function(require,module,exports){
-var $ = require('jquery');
-
-var UILoader = {
-
-	container: "#sceneContainer",
-	into: "",
-	callback: function() {},
-
-	paths: {
-		shared: 'game/scenes/shared/',
-		scenes: 'game/scenes/'
-	},
-
-	load: function(html, into, callback) {
-		this.callback = callback;
-		this.into = !into ? this.container : into;
-		var path = html.split(".");
-
-		var pathObj = {
-			folder: path[0],
-			file: path[1]
-		};
-
-		this.getData(pathObj);
-	},
-
-	getData: function(pathObj) {
-		var folderPath = typeof this.paths[pathObj.folder] === "undefined" ?
-						 this.paths.scenes + pathObj.folder + '/' :
-						 this.paths[pathObj.folder];
-
-		var path = folderPath + pathObj.file + '.html';
-
-		$.ajax({
-			context: this,
-			url: path,
-			success: this.doRender,
-			dataType: "html"
-		});
-	},
-
-	doRender: function(data) {
-		$(this.into).html(data);
-		this.callback();
-	}
-};
-
-module.exports = UILoader;
-},{"jquery":33}],11:[function(require,module,exports){
-var TextView = require('../views/TextView');
-var TerminalView = require('../views/TerminalView');
-
-var ViewLoader = {
-
-	load: function(view, screen) {
-		var viewClass;
-
-		switch(view) {
-			case "text":
-				viewClass = TextView;
-				break;
-			case "terminal":
-				viewClass = TerminalView;
-				break;
-			default:
-				viewClass = TerminalView;
-				break;
-		}
-
-		return new viewClass(screen);
-	},
-};
-
-module.exports = ViewLoader;
-},{"../views/TerminalView":13,"../views/TextView":14}],12:[function(require,module,exports){
-var $ = require('jquery');
-var StringReplace = require('../lib/StringReplace');
-
-var BaseView = function($screen) {
-	this.$screen = $screen;
-};
-
-BaseView.prototype = {
-
-	renderSimple: function(text, color, effect, callback) {
-		this.render(text, color, effect, callback);
-	},
-
-	renderSequence: function(textArray, dynamicData, effect, callback) {
-		var counter = 0;
-		var content = textArray;
-		var self = this;
-
-		if(typeof dynamicData !== "undefined" && dynamicData !== null) {
-			content = StringReplace.put(dynamicData, textArray);
-		}
-
-		function next() {
-			if(counter < textArray.length) {
-				self.render(content[counter], null, effect);
-				counter++;
-				setTimeout(next, 0);
-			}
-		}
-
-		next();
-	},
-
-	render: function(text, color, effect, callback) {
-		color = color === null ? "white" : color;
-
-		if(text instanceof Array) {
-			color = text[1];
-			text = text[0];
-		}
-
-		var $text = $("<p style='color: "+ color +";'>" + text + "</p>");
-		this.renderEffects[effect]($text, $(this.$screen), callback);
-	},
-
-	renderEffects: {
-
-		fade: function($text, $screen, callback) {
-			$text.css("display", "none");
-			$screen.append($text);
-			$text.fadeIn(1000, callback);
-		}
-	}
-};
-
-module.exports = BaseView;
-},{"../lib/StringReplace":9,"jquery":33}],13:[function(require,module,exports){
-var $ = require('jquery');
-
-var TerminalView = function() {
-
-	var self = this;
-
-	this.echoCommand = function(command) {
-		if(command instanceof Array) {
-			command = command.join(" ");
-		}
-		render(">> " + command, "lime");
-	};
-
-	var render = function(text, color) {
-		color = color || "white";
-
-		if(text instanceof Array) {
-			color = text[1];
-			text = text[0];
-		}
-
-		var $text = $("<p style='color: "+ color +";'>" + text + "</p>");
-		$("#screen").append($text);
-	};
-};
-
-module.exports = TerminalView;
-},{"jquery":33}],14:[function(require,module,exports){
-var $ = require('jquery');
-var BaseView = require('./BaseView');
-
-var TextView = function(ele) {
-	this.ele = ele;
-	this.baseRenderer = new BaseView(ele);
-};
-
-TextView.prototype = {
-
-	constructor: TextView,
-
-	render: function(data, callback) {
-		this.baseRenderer.renderSimple(data, "white", "fade", callback);
-	},
-};
-
-module.exports = TextView;
-},{"./BaseView":12,"jquery":33}],15:[function(require,module,exports){
-var $ = require('jquery');
-var _ = require('lodash');
-var engine = require('../engine/engine');
-var scenelist = require('./data/sceneList');
-var objectslist = require('./data/objectsList');
-var helpers = require('../helpers');
-var model = require('./models/GameModel');
-
-var GameController = function(saveData) {
-	this.model = new model(saveData);
-	this.loadNewScene = _.bind(this.loadNewScene, this);
-};
-
-GameController.prototype = {
-	constructor: GameController,
-	currentScene: {},
-	currentUI: {},
-
-	start: function() {
-		var gameObjects = _.merge({}, scenelist, objectslist);
-		engine.sceneLoader.init(gameObjects);
-		this.model.init();
-		this.newScene();
-	},
-
-	newScene: function() {
-		this.loadNewUI();
-	},
-
-	loadNewUI: function() {
-		var newUI = this.model.getCurrentUI();
-
-		this.currentUI = engine.uiLoader.load(
-			newUI.html,
-			newUI.container,
-			this.loadNewScene
-		);
-	},
-
-	loadNewScene: function() {
-		var sceneName = this.model.getCurrentScene();
-
-		this.currentScene = engine.sceneLoader.load(
-			sceneName,
-			this.model.getSceneData("current"),
-			this,
-			this.gameObjectInterface
-		);
-
-		this.currentScene.start(this.model.getSceneState("current"));
-	},
-
-	gameObjectInterface: function(caller, argument) {
-
-	}
-};
-
-module.exports = GameController;
-},{"../engine/engine":2,"../helpers":29,"./data/objectsList":17,"./data/sceneList":19,"./models/GameModel":21,"jquery":33,"lodash":34}],16:[function(require,module,exports){
-var GlobalData = {
-
-};
-
-module.exports = GlobalData;
-},{}],17:[function(require,module,exports){
-var objectsList = {
-	// Paths
-	"intro_end_path": require('../objects/paths/IntroEndPath'),
-};
-
-module.exports = objectsList;
-},{"../objects/paths/IntroEndPath":22}],18:[function(require,module,exports){
-var saveSchema = {
-	name: "Save",
-	player: {
-		name: "Player"
-	},
-	stats: {
-		timePlayed: 0
-	},
-	game: {
-		currentScene: "intro",
-		sceneStates: {}
-	}
-};
-
-module.exports = saveSchema;
-},{}],19:[function(require,module,exports){
-var sceneList = {
-	intro: require('../scenes/intro/intro'),
-	test1: require('../scenes/test1/test1'),
-	test2: require('../scenes/test2/test2')
-};
-
-module.exports = sceneList;
-},{"../scenes/intro/intro":24,"../scenes/test1/test1":26,"../scenes/test2/test2":28}],20:[function(require,module,exports){
-var sceneMap = {
-	intro: {
-		scene: "intro",
-		data: require('../scenes/intro/data'),
-		paths: {
-			next: "intro_end_path"
-		},
-		items: null,
-		interactions: null,
-		characters: null,
-		input: {
-			type: "button",
-			config: {
-				key: 32,
-				command: "continue"
-			}
-		},
-		view: {
-			html: 'shared.text',
-			view: 'text',
-			container: '#sceneContainer',
-			screen: '#textscreen'
-		},
-		state: {
-			content: "intro",
-			position: 0
-		}
-	},
-	test1: {
-		scene: "test1",
-		data: require('../scenes/test1/data'),
-		paths: {
-			forward: {
-				object: "path",
-				leadsTo: "test2",
-				description: "Go to test2!"
-			},
-			back: false
-		},
-		items: null,
-		interactions: null,
-		characters: null,
-		input: {
-			type: "command",
-			config: null
-		},
-		view: {
-			html: 'shared.terminal',
-			view: 'terminal',
-			container: '#sceneContainer',
-			screen: '#terminalscreen'
-		},
-		state: null
-	},
-	test2: {
-		scene: "test2",
-		data: require('../scenes/test2/data'),
-		paths: {
-			forward: {
-				object: "path",
-				leadsTo: "intro",
-				description: "Go back to intro!"
-			},
-			back: true
-		},
-		items: null,
-		interactions: null,
-		characters: null,
-		input: {
-			type: "command",
-			config: null
-		},
-		view: {
-			html: 'shared.terminal',
-			view: 'terminal',
-			container: '#sceneContainer',
-			screen: '#terminalscreen'
-		},
-		state: null
-	}
-};
-
-module.exports = sceneMap;
-},{"../scenes/intro/data":23,"../scenes/test1/data":25,"../scenes/test2/data":27}],21:[function(require,module,exports){
-var data = require('../data/global');
-var scenemap = require('../data/sceneMap');
-var _ = require('lodash');
-
-var GameModel = function(saveData) {
-	this.saveData = saveData;
-	this.data = data;
-	this.state;
-};
-
-GameModel.prototype = {
-	constructor: GameModel,
-
-	init: function() {
-		this.state = _.merge(this.data, this.saveData);
-	},
-
-	getCurrentScene: function() {
-		return this.state.currentScene;
-	},
-
-	getCurrentUI: function() {
-		var sceneName = this.getCurrentScene();
-		return scenemap[sceneName].view;
-	},
-
-	setCurrentScene: function(sceneId) {
-		this.state.currentScene = sceneId;
-		return sceneId;
-	},
-
-	getSceneData: function(scene) {
-		if(scene === "current") {
-			scene = this.state.currentScene;
-		}
-		return scenemap[scene];
-	},
-
-	getSceneState: function(scene) {
-		if(scene === "current") {
-			scene = this.state.currentScene;
-		}
-		return scenemap[scene].state;
-	},
-
-	setSceneState: function(scene, values) {
-		if(scene === "current") {
-			scene = this.state.currentScene;
-		}
-		_.merge(scenemap[scene].state, values, this.stateFuncs, this);
-		return scenemap[scene].state;
-	},
-
-	stateFuncs: function(oldVal, newVal) {
-		var setVal;
-
-		switch(newVal) {
-			case "increment":
-				setVal = oldVal + 1;
-				break;
-			case "decrement":
-				setVal = oldVal - 1;
-				break;
-			default:
-				setVal = newVal;
-				break;
-		}
-
-		return setVal;
-	}
-};
-
-module.exports = GameModel;
-},{"../data/global":16,"../data/sceneMap":20,"lodash":34}],22:[function(require,module,exports){
-var IntroEndPath = function(callback) {
-	this.callback = callback;
-}
-
-IntroEndPath.prototype = {
-	leadsTo: "test1",
-	description: "Begin the game",
-	locked: false,
-
-	activate: function() {
-		callback(this.leadsTo);
-	}
-}
-
-module.exports = IntroEndPath;
-},{}],23:[function(require,module,exports){
-var IntroData = {
-	content: {
-		intro: [
-			"test 1",
-			"test 2",
-			"test 3",
-			"test 4",
-			"test 5"
-		]
-	}
-};
-
-module.exports = IntroData;
-},{}],24:[function(require,module,exports){
-var _ = require('lodash');
-
-var IntroScene = function(paths, items, interactions, characters, content, view, controller) {
-	this.paths = paths;
-	this.items = items;
-	this.interactions = interactions;
-	this.characters = characters;
-	this.content = content;
-	this.view = view;
-	this.game = controller;
-
-	this.renderedCallback = _.bind(this.renderedCallback, this);
-};
-
-IntroScene.prototype = {
-
-	constructor: IntroScene,
-
-	start: function(state) {
-		this.view.render(this.content[state.content][state.position], this.renderedCallback);
-	},
-
-	renderedCallback: function(response) {
-		var state = this.game.model.setSceneState("current", {position: "increment"});
-		var storyLength = this.content[state.content].length;
-
-		if(state.position >= storyLength) {
-			this.paths.next.activate();
-		}
-	},
-
-	play: function(state) {
-		this.view.render(this.content[state.content][state.position], this.renderedCallback);
-	}
-};
-
-module.exports = IntroScene;
-
-},{"lodash":34}],25:[function(require,module,exports){
-var IntroData = {
-	state: {
-		content: "init",
-		position: 0
-	},
-
-	content: {
-		init: [
-			"scene test 1",
-			"test 2",
-			"test 3",
-			"test 4",
-			"test 5"
-		]
-	}
-};
-
-module.exports = IntroData;
-},{}],26:[function(require,module,exports){
-
-},{}],27:[function(require,module,exports){
-var IntroData = {
-	state: {
-		content: "init",
-		position: 0
-	},
-
-	content: {
-		init: [
-			"scene test 2",
-			"hahaha",
-			"hohohop",
-			"lolol",
-			"derpaderpa"
-		]
-	}
-};
-
-module.exports = IntroData;
-},{}],28:[function(require,module,exports){
-module.exports=require(26)
-},{}],29:[function(require,module,exports){
-var helpers = {
-	isFunction: function(obj) {
-	  return !!(obj && obj.constructor && obj.call && obj.apply);
-	},
-	extend: function(target, source) {
-	  target = target || {};
-	  for (var prop in source) {
-	    if (typeof source[prop] === 'object') {
-	      target[prop] = this.extend(target[prop], source[prop]);
-	    } else {
-	      target[prop] = source[prop];
-	    }
-	  }
-	  return target;
-	},
-	scope: function(fn, me) {
-		return function() {
-			return fn.apply(me, arguments);
-		};
-	}
-};
-
-module.exports = helpers;
-},{}],30:[function(require,module,exports){
-var Application = require('./webapp');
-
-window.onload = function() {
-	app = new Application();
-	app.init();
-};
-},{"./webapp":32}],31:[function(require,module,exports){
-var Progress = {
-
-	storageKey: "textadventuregame",
-
-	save: function(data) {
-		var extSaves = JSON.parse(localStorage.getItem(this.storageKey));
-		extSaves[data.name] = data;
-		localStorage.setItem(this.storageKey, JSON.stringify(extSaves));
-	},
-
-	load: function(slotName) {
-		return JSON.parse(localStorage.getItem(this.storageKey))[slotName];
-	},
-
-	createSaveSlots: function() {
-		var extSaves = localStorage.getItem(this.storageKey);
-
-		if(!extSaves) {
-			this.clearSaves();
-		}
-	},
-
-	clearSaves: function() {
-		localStorage.setItem(this.storageKey, JSON.stringify({}));
-	},
-
-	getSaveList: function() {
-		var saveSlots = JSON.parse(localStorage.getItem(this.storageKey));
-		var slotNames = Object.keys(saveSlots);
-		return slotNames;
-	}
-};
-
-module.exports = Progress;
-},{}],32:[function(require,module,exports){
-var $ = require('jquery');
-var loader = require('./GameLoader');
-
-var Application = function() {
-
-    var self = this;
-
-    this.loadGame = "";
-    this.saveSlotNames = {};
-
-    var dev = true;
-
-    this.init = function() {
-        loader.init();
-
-        if(dev) {
-            loader.loadDev();
-            hideMenu();
-        }
-        else {
-            self.saveSlotNames = loader.slotNamesList;
-            doMainMenu();
-        }
-    };
-
-    this.start = function() {
-        if(self.loadGame === "") {
-            self.loadGame = "new";
-        }
-        hideMenu(beforeLoad);
-    };
-
-    var doMainMenu = function() {
-        populateSaveList();
-
-        $('input[name="save"]').on("change", setGame);
-        $("#startGame").on("click", self.start);
-        $("#purgeSaves").on("click", loader.removeAllSaves);
-    };
-
-    var setGame = function(e) {
-        self.loadGame = $(this).attr("checked", true).val();
-        $("#startGame").attr("disabled", false);
-    };
-
-    var populateSaveList = function() {
-        var $list = $("#saveList");
-
-        for(var save = 0; save < self.saveSlotNames.length; save++) {
-            var radioId = self.saveSlotNames[save] + '-' +Date.now();
-            var $slotRadio = $('<input type="radio" name="save" id="'+ radioId +'" value="' + self.saveSlotNames[save] + '">');
-            var $slotLabel = $('<label for="'+ radioId +'"></label>').text(self.saveSlotNames[save]);
-            var $slotUI = $('<li></li>').append($slotRadio).append($slotLabel);
-
-            $list.append($slotUI);
-        }
-    };
-
-    var hideMenu = function(callback) {
-        callback = callback || function() {};
-
-        $(".start-screen").fadeOut(500, callback);
-        $("body").addClass("in-game");
-    };
-
-    var beforeLoad = function() {
-        if(self.loadGame === "new") {
-            loader.newSave();
-        }
-
-        loader.load(self.loadGame);
-    };
-};
-
+($traceurRuntime.createClass)(Application, {
+  init: function() {
+    this.loader.init();
+    if (this.dev) {
+      this.loader.loadDev();
+      this.hideMenu();
+    } else {
+      this.doMainMenu();
+    }
+  },
+  start: function() {
+    if (this.loadGame === "") {
+      this.loadGame = "new";
+    }
+    this.hideMenu(this.beforeLoad);
+  },
+  doMainMenu: function() {
+    this.populateSaveList();
+    $('input[name="save"]').on("change", $.proxy(this.setGame, this));
+    $("#startGame").on("click", $.proxy(this.start, this));
+    $("#purgeSaves").on("click", this.loader.removeAllSaves);
+  },
+  setGame: function(e) {
+    this.loadGame = $(this).attr("checked", true).val();
+    $("#startGame").attr("disabled", false);
+  },
+  populateSaveList: function() {
+    var $list = $("#saveList");
+    for (var save = 0; save < this.loader.saveSlotNames; save++) {
+      var radioId = this.loader.saveSlotNames[$traceurRuntime.toProperty(save)] + '-' + Date.now();
+      var $slotRadio = $('<input type="radio" name="save" id="' + radioId + '" value="' + this.loader.saveSlotNames[$traceurRuntime.toProperty(save)] + '">');
+      var $slotLabel = $('<label for="' + radioId + '"></label>').text(this.loader.saveSlotNames[$traceurRuntime.toProperty(save)]);
+      var $slotUI = $('<li></li>').append($slotRadio).append($slotLabel);
+      $list.append($slotUI);
+    }
+  },
+  hideMenu: function(callback) {
+    callback = callback || function() {};
+    $(".start-screen").fadeOut(500, $.proxy(callback, this));
+    $("body").addClass("in-game");
+  },
+  beforeLoad: function() {
+    if (this.loadGame === "new") {
+      this.loader.newSave();
+    }
+    this.loader.load(this.loadGame);
+  }
+}, {});
 module.exports = Application;
-},{"./GameLoader":1,"jquery":33}],33:[function(require,module,exports){
+
+},{"./GameLoader":3,"jquery":9,"lodash":10}],3:[function(require,module,exports){
+"use strict";
+var progress = require('../engine/util/Progress');
+var GameLoader = function GameLoader() {
+  this.progress = new progress();
+  this.currentSaveName = "";
+  this.saveSlotNames = null;
+};
+($traceurRuntime.createClass)(GameLoader, {
+  init: function() {
+    this.progress.createSaveSlots();
+    this.saveSlotNames = this.progress.getSaveList();
+  },
+  load: function(loadSave) {
+    if (loadSave === "new") {
+      loadSave = this.currentSaveName;
+    }
+    var saveData = this.progress.load(loadSave);
+    this.initializeGame(saveData);
+  },
+  newSave: function() {
+    var save = {};
+    var saveName = prompt("Give your save a name:");
+    this.currentSaveName = saveName;
+    save.name = this.currentSaveName;
+    this.progress.save(save);
+  },
+  removeAllSaves: function() {
+    if (confirm("Are you sure?")) {
+      this.progress.clearSaves();
+      location.reload();
+    }
+  },
+  loadDev: function() {
+    var extSaves = localStorage.getItem("text_dev");
+    if (!extSaves) {
+      var save = {};
+      save.name = "dev";
+      localStorage.setItem("text_dev", JSON.stringify({"dev": save}));
+    }
+    var devData = JSON.parse(localStorage.getItem("text_dev"))[$traceurRuntime.toProperty("dev")];
+    this.initializeGame(devData);
+  },
+  initializeGame: function(saveData) {
+    var GameController = new game(saveData);
+    GameController.start();
+  }
+}, {});
+module.exports = GameLoader;
+
+},{"../engine/util/Progress":6}],4:[function(require,module,exports){
+"use strict";
+Object.defineProperties(exports, {
+  default: {get: function() {
+      return $__default;
+    }},
+  __esModule: {value: true}
+});
+var jQuery = require('jquery').jQuery;
+var Application = function Application() {
+  this.loadGame = "";
+  this.saveSlotNames = {};
+  this.dev = true;
+};
+($traceurRuntime.createClass)(Application, {
+  init: function() {
+    console.log("hah");
+    console.log(jQuery);
+    if (this.dev) {
+      loader.loadDev();
+      this.hideMenu();
+    } else {
+      this.saveSlotNames = loader.slotNamesList;
+      doMainMenu();
+    }
+  },
+  start: function() {
+    if (self.loadGame === "") {
+      self.loadGame = "new";
+    }
+    hideMenu(beforeLoad);
+  },
+  doMainMenu: function() {
+    populateSaveList();
+    $('input[name="save"]').on("change", setGame);
+    $("#startGame").on("click", self.start);
+    $("#purgeSaves").on("click", loader.removeAllSaves);
+  },
+  setGame: function(e) {
+    self.loadGame = $(this).attr("checked", true).val();
+    $("#startGame").attr("disabled", false);
+  },
+  populateSaveList: function() {
+    var $list = $("#saveList");
+    for (var save = 0; save < self.saveSlotNames.length; save++) {
+      var radioId = self.saveSlotNames[$traceurRuntime.toProperty(save)] + '-' + Date.now();
+      var $slotRadio = $('<input type="radio" name="save" id="' + radioId + '" value="' + self.saveSlotNames[$traceurRuntime.toProperty(save)] + '">');
+      var $slotLabel = $('<label for="' + radioId + '"></label>').text(self.saveSlotNames[$traceurRuntime.toProperty(save)]);
+      var $slotUI = $('<li></li>').append($slotRadio).append($slotLabel);
+      $list.append($slotUI);
+    }
+  },
+  hideMenu: function(callback) {
+    callback = callback || function() {};
+    $(".start-screen").fadeOut(500, callback);
+    $("body").addClass("in-game");
+  },
+  beforeLoad: function() {
+    if (self.loadGame === "new") {
+      loader.newSave();
+    }
+    loader.load(self.loadGame);
+  }
+}, {});
+var $__default = Application;
+
+},{"jquery":9}],5:[function(require,module,exports){
+"use strict";
+var progress = require('./util/Progress');
+var Engine = function Engine() {};
+($traceurRuntime.createClass)(Engine, {conststructor: function() {
+    this.progress = new progress();
+  }}, {});
+module.exports = Engine;
+
+},{"./util/Progress":6}],6:[function(require,module,exports){
+"use strict";
+var Progress = function Progress() {
+  this.storageKey = "textadventuregame";
+};
+($traceurRuntime.createClass)(Progress, {
+  save: function(data) {
+    var extSaves = JSON.parse(localStorage.getItem(this.storageKey));
+    $traceurRuntime.setProperty(extSaves, data.name, data);
+    localStorage.setItem(this.storageKey, JSON.stringify(extSaves));
+  },
+  load: function(slotName) {
+    return JSON.parse(localStorage.getItem(this.storageKey))[$traceurRuntime.toProperty(slotName)];
+  },
+  createSaveSlots: function() {
+    var extSaves = localStorage.getItem(this.storageKey);
+    if (!extSaves) {
+      this.clearSaves();
+    }
+  },
+  clearSaves: function() {
+    localStorage.setItem(this.storageKey, JSON.stringify({}));
+  },
+  getSaveList: function() {
+    var saveSlots = JSON.parse(localStorage.getItem(this.storageKey));
+    var slotNames = Object.keys(saveSlots);
+    return slotNames;
+  }
+}, {});
+module.exports = Progress;
+
+},{}],7:[function(require,module,exports){
+"use strict";
+var Application = require('./app/App');
+window.onload = function() {
+  var app = new Application();
+  app.init();
+};
+
+},{"./app/App":2}],8:[function(require,module,exports){
+module.exports=require(4)
+},{"jquery":9}],9:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.1
  * http://jquery.com/
@@ -10224,7 +9428,7 @@ return jQuery;
 
 }));
 
-},{}],34:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 (function (global){
 /**
  * @license
@@ -17013,4 +16217,4 @@ return jQuery;
 }.call(this));
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}]},{},[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32])
+},{}]},{},[1,2,3,4,5,6,7,8]);

@@ -17,6 +17,11 @@ module.exports = function(grunt) {
           transform: ['debowerify']
         }
       },
+      es6: {
+        files: {
+          'dist/js/adventure.js': ['es5/**/*.js']
+        }
+      },
       tests: {
         files: {
           'test/test-webapp.js': 'test/webapp/**/*.js',
@@ -42,6 +47,24 @@ module.exports = function(grunt) {
         }
       }
     },
+
+    traceur: {
+      options: {
+        experimental: true,
+        blockBinding: true,
+        includeRuntime: false,
+        modules: "commonjs"
+      },
+      custom: {
+        files: [{
+          expand: true,
+          cwd: 'es6',
+          src: ['**/*.js'],
+          dest: 'es5'
+        }]
+      },
+    },
+
     mocha: {
       options: {
         run: true,
@@ -105,6 +128,10 @@ module.exports = function(grunt) {
       },
       gruntfile: {
         files: "Gruntfile.js"
+      },
+      es6: {
+        files: ['es6/**/*.js'],
+        tasks: ['traceur', 'browserify:es6']
       },
       options: {
         livereload: true
